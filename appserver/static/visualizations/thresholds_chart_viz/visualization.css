@@ -1,0 +1,46 @@
+.thresholds_chart_viz-container {
+    position:relative;
+}
+.thresholds_chart_viz-container svg {
+    /* margin: 10px auto;*/
+    display: block;
+    position: absolute;
+}
+.thresholds_chart_viz-tooltip {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    background-color: black;
+    text-align: left;
+    padding: 6px;
+    border-radius: 1px;
+    color: #ffffff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+.thresholds_chart_viz-tooltip_name {
+    font-weight: bold;
+    padding-bottom: 10px;
+}
+.thresholds_chart_viz-tooltip_value {
+    text-align:right;
+    font-weight: bold;
+    padding-left: 20px;
+}
+.thresholds_chart_viz-tooltip_colorbox {
+    width: 10px;
+    height:10px;
+    display: inline-block;
+}
+.thresholds_chart_viz-tooltip_th {
+    text-align:right;
+}
+/*.thresholds_chart_viz-tooltip-divider {
+    color: black;
+    font-weight: bold;
+}*/
+.thresholds_chart_viz-bad_data {
+    text-align: center;
+    color: #818d99;
+    line-height: 3;
+}
