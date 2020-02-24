@@ -18,15 +18,18 @@
     color: #ffffff;
     box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
 }
-.thresholds_chart_viz-tooltip_name {
+.thresholds_chart_viz-tooltip_name,
+.thresholds_chart_viz-tooltip_sev,
+.thresholds_chart_viz-tooltip_value {
     font-weight: bold;
     padding-bottom: 10px;
 }
-.thresholds_chart_viz-tooltip_value {
-    text-align:right;
-    font-weight: bold;
+.thresholds_chart_viz-tooltip_value,
+.thresholds_chart_viz-tooltip_tcell ,
+.thresholds_chart_viz-tooltip_sev{
     padding-left: 20px;
 }
+
 .thresholds_chart_viz-tooltip_colorbox {
     width: 10px;
     height:10px;
@@ -35,12 +38,18 @@
 .thresholds_chart_viz-tooltip_th {
     text-align:right;
 }
-/*.thresholds_chart_viz-tooltip-divider {
-    color: black;
-    font-weight: bold;
-}*/
 .thresholds_chart_viz-bad_data {
     text-align: center;
     color: #818d99;
     line-height: 3;
+}
+.thresholds_chart_viz-overlaytext_light {
+    font-weight: bold;
+    fill: black;
+    text-shadow: rgba(255, 255, 255,0.5) -1px -1px 0px, rgba(255, 255, 255,0.5) 1px -1px 0px, rgba(255, 255, 255,0.5) -1px 1px 0px, rgba(255, 255, 255,0.5) 1px 1px 0px;
+}
+.thresholds_chart_viz-overlaytext_dark {
+    font-weight: bold;
+    fill: white;
+    text-shadow: rgba(0,0,0,0.5) -1px -1px 0px, rgba(0,0,0,0.5) 1px -1px 0px, rgba(0,0,0,0.5) -1px 1px 0px, rgba(0,0,0,0.5) 1px 1px 0px;
 }

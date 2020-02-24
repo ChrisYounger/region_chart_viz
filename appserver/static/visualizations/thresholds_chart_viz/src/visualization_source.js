@@ -16,13 +16,13 @@ function(
             var viz = this;
             viz.instance_id = "thresholds_chart_viz_" + Math.round(Math.random() * 1000000);
             viz.instance_id_ctr = 0;
-            var theme = 'light'; 
+            viz.theme = 'light'; 
             if (typeof vizUtils.getCurrentTheme === "function") {
-                theme = vizUtils.getCurrentTheme();
+                viz.theme = vizUtils.getCurrentTheme();
             }
             viz.colors = ["#006d9c", "#4fa484", "#ec9960", "#af575a", "#b6c75a", "#62b3b2"];
             if (typeof vizUtils.getColorPalette === "function") {
-                viz.colors = vizUtils.getColorPalette("splunkCategorical", theme);
+                viz.colors = vizUtils.getColorPalette("splunkCategorical", viz.theme);
             }
 
             viz.$container_wrap = $(viz.el);
@@ -122,7 +122,7 @@ function(
             // #################################################################################################################
             // SVG Setup
 
-            var margin = {top: 10, right: 30, bottom: 30, left: 60};
+            var margin = {top: 10, right: 40, bottom: 30, left: 60};
             if (viz.config.xtitle_show !== "hide") {
                 margin.bottom = 50;
             }
@@ -142,14 +142,16 @@ function(
             //var svg_node = viz.$container_wrap.children();
 
 
+// TODO allow a trendline
             // #################################################################################################################
             // Data processing
 
-console.log("indata:", viz.data)
             var field1 = viz.data.fields[0].name;
             var field2 = viz.data.fields[1].name;
-            var datamin = null;
-            var datamax = null;
+            var datamin_y = null;
+            var datamax_y = null;
+            var datamin_x = null;
+            var datamax_x = null;
             // TODO should these be local variables
             viz.data_processed = [];
             viz.data_orphans = [];
@@ -165,6 +167,10 @@ console.log("indata:", viz.data)
                     x: new Date(viz.data.results[k][field1]),
                     row: k
                 };
+                if (datamin_x === null) {
+                    datamin_x = record.x;
+                }
+                datamax_x = record.x;
                 viz.thresholds[k] = {stops: [], sevs: []};
                 if (viz.data.results[k].hasOwnProperty("thresholds")) {
                     var match_row_thresholds = /thresholds=\"([^\"]*)/.exec(viz.data.results[k].thresholds);
@@ -202,11 +208,13 @@ console.log("indata:", viz.data)
                     }
                 }
                 // Calculate the data limits (after we have inserted zeros if thats configured)
-                if (datamin === null || datamin > record.y) {
-                    datamin = record.y;
-                }
-                if (datamax === null || datamax < record.y) {
-                    datamax = record.y;
+                if (record.y !== null) {
+                    if (datamin_y === null || datamin_y > record.y) {
+                        datamin_y = record.y;
+                    }
+                    if (datamax_y === null || datamax_y < record.y) {
+                        datamax_y = record.y;
+                    }
                 }
                 // Figure out which points have a null on both sides. these will need to be drawn as dots
                 if (viz.config.nulls === "gap") {
@@ -236,13 +244,16 @@ console.log("indata:", viz.data)
                         }
                     }
                 }
-                if (statusdot !== null) {
+                // status dots are still included if they are null (becuase column might not have thresholds). 
+                // dots are not included if there is a gap in data
+                if (record.y !== null) {
                     viz.status_dots.push({ 
                         x: record.x,
                         y: record.y,
-                        sev:  statusdot
+                        sev: statusdot
                     });
-                }
+                    record.sev = statusdot;
+                } 
                 viz.data_processed.push(record);
             }
 
@@ -254,8 +265,8 @@ console.log("outdata:", viz.data_processed)
 
             // Add bottom X axis --> it is usually a date format
             var x = d3.scaleTime()
-                //TODO should go off the supplied input data instead of the processed data
-                .domain(d3.extent(viz.data_processed, function(d) { return d.x; }))
+                //Instead of using d3.extent we  make sure that we use the input data. becuase points may get dropped from the processed_data array
+                .domain([datamin_x, datamax_x])
                 .range([ 0, width ]);
             svg.append("g")
                 .attr("transform", "translate(0," + height + ")")
@@ -263,19 +274,18 @@ console.log("outdata:", viz.data_processed)
                 // Fix the colour on the tick marks
                 .call(function(g) { return g.select(".domain").attr("stroke","#c3cbd4"); })
                 // remove the D3 font styling
-                .call(function(g) { return g.attr("font-family", "").attr("font-size", "11px")});
-// TODO datamin is incorrect
-console.log("datamin is ", datamin);
+                .call(function(g) { return g.attr("font-family", "").attr("font-size", "11px") });
+
             // Add left Y axis
             var y = d3.scaleLinear()
-                .domain([viz.config.min !== "" ? (+ viz.config.min) : datamin, viz.config.max !== "" ? (+ viz.config.max) : datamax])
+                .domain([viz.config.min !== "" ? (+ viz.config.min) : datamin_y, viz.config.max !== "" ? (+ viz.config.max) : datamax_y])
                 .range([height, 0])
                 .nice();
             svg.append("g")
                 .call(d3.axisLeft(y))
                 .call(function(g) { return g.select(".domain").remove(); })
                 //  extend the tick line
-                .call(function(g) { return g.selectAll(".tick:not(:first-of-type) line").attr("x1", width).attr("stroke","#e1e6eb")})
+                .call(function(g) { return g.selectAll(".tick:not(:first-of-type) line").attr("x1", width).attr("stroke", (viz.theme === 'light' ? "#e1e6eb" : "#324147" ))})
                 // change the color on the last tick
                 .call(function(g) { return g.selectAll(".tick:first-of-type line").attr("stroke","#c3cbd4")})
                 // remove the D3 font styling so it will inherit
@@ -306,14 +316,13 @@ console.log("datamin is ", datamin);
 
             // compute the regions now that the y axis has been setup
             var thresholds = [];
-            // TODO the thresholds can extend out of the left and right of the canvas when the timeblocks are chunky
 
             // TODO fix these limits
             var limit_bottom = -99999999;
             var limit_top = 99999999;
             var col_width = 10;
             // assume blocks are evenly spaced
-            if (viz.data.results.length > 2) {
+            if (viz.data.results.length > 1) {
                 // TODO fix date assumption
                 col_width = x(new Date(viz.data.results[1][field1])) - x(new Date(viz.data.results[0][field1]));
             }
@@ -330,7 +339,7 @@ console.log("datamin is ", datamin);
                     var d = {
                         "sev": viz.thresholds[i].sevs[j],
                         // TODO fix date assumption
-                        "x": new Date(viz.data.results[i][field1]),
+                        "left": x(new Date(viz.data.results[i][field1])),
                         "from": Math.min(Math.max(y(j === 0 ? limit_bottom :  + viz.thresholds[i].stops[j-1]), 0), height),
                         "to": Math.min(Math.max(y(j >= viz.thresholds[i].stops.length ? limit_top : + viz.thresholds[i].stops[j]), 0), height),
                         "width": skips, 
@@ -342,7 +351,6 @@ console.log("datamin is ", datamin);
                 }
                 
             }
-            console.log("thresholds", thresholds);
 
             // add the threshold regions underneath
             svg.selectAll(".region")
@@ -351,9 +359,9 @@ console.log("datamin is ", datamin);
                     .append("rect") 
                     .attr("fill", function(d) { return viz.getSeverityColor(d.sev); })
                     .attr("opacity", viz.config.threshold_opacity / 100)
-                    .attr("x", function(d) { return x(d.x); })
+                    .attr("x", function(d) { return d.left; })
                     .attr("y", function(d) { return d.to; })
-                    .attr("width", function(d) { return d.width * col_width; })
+                    .attr("width", function(d) { var avail = width - d.left; return Math.min(avail + 14,  d.width * col_width);})
                     .attr("height", function(d) { return d.height; })
 
 
@@ -391,11 +399,6 @@ console.log("datamin is ", datamin);
                     .attr("cx", function(d, i) { return x(d.x) })
                     .attr("cy", function(d) { return y(d.y) })
                     .attr("r", viz.config.line_size)
-                    // .on("mouseover", function(a, b, c) { 
-                    //     console.log(a) 
-                    //     //this.attr('class', 'focus')
-                    // })
-                    // .on("mouseout", function() {  })
 
             // Appends a status circle for each datapoint 
             if (viz.config.status_dots !== "hide") {
@@ -405,16 +408,11 @@ console.log("datamin is ", datamin);
                         //.filter(function(d) { return d.y !== null })
                         .append("circle") // Uses the enter().append() method
                         .attr("class", "sdot") // Assign a class for styling
-                        .attr("fill", function(d){ return viz.getSeverityColor(d.sev); })
+                        .attr("fill", function(d){ return d.sev === null ? viz.config.line_color : viz.getSeverityColor(d.sev); })
                         .attr("stroke", viz.config.line_color) //viz.colors[0])
                         .attr("cx", function(d, i) { return x(d.x) })
                         .attr("cy", function(d) { return y(d.y) })
-                        .attr("r", viz.config.line_size)
-                        // .on("mouseover", function(a, b, c) { 
-                        //     console.log(a) 
-                        //     //this.attr('class', 'focus')
-                        // })
-                        // .on("mouseout", function() {  })
+                        .attr("r", viz.config.line_size);
             }
 
 
@@ -423,10 +421,11 @@ console.log("datamin is ", datamin);
             // Tooltip stuff
 
             // TODO tooltip should show the current status
-            var tooltip = $("<div class=\"thresholds_chart_viz-tooltip\"><table><tbody><tr><td colspan=\"2\" class=\"thresholds_chart_viz-tooltip_date\"></td></tr><tr><td class=\"thresholds_chart_viz-tooltip_name\"></td><td class=\"thresholds_chart_viz-tooltip_value\"></td></tr></tbody></table></div>").appendTo(viz.$container_wrap);
+            var tooltip = $("<div class=\"thresholds_chart_viz-tooltip\"><table><tbody><tr><td colspan=\"3\" class=\"thresholds_chart_viz-tooltip_date\"></td></tr><tr><td class=\"thresholds_chart_viz-tooltip_name\"></td><td class=\"thresholds_chart_viz-tooltip_sev\"></td><td class=\"thresholds_chart_viz-tooltip_value\"></td></tr></tbody></table></div>").appendTo(viz.$container_wrap);
             var tooltip_date = tooltip.find(".thresholds_chart_viz-tooltip_date");
             var tooltip_name = tooltip.find(".thresholds_chart_viz-tooltip_name");
             var tooltip_value = tooltip.find(".thresholds_chart_viz-tooltip_value");
+            var tooltip_sev = tooltip.find(".thresholds_chart_viz-tooltip_sev");
             var tooltip_body = tooltip.find("tbody");
 
             // This allows to find the closest X index of the mouse:
@@ -464,7 +463,7 @@ console.log("datamin is ", datamin);
                 // recover coordinate we need
                 var x0 = x.invert(d3.mouse(this)[0]);
                 var i = bisect(viz.data_processed, x0, 1);
-                selectedData = viz.data_processed[i]
+                selectedData = viz.data_processed[i];
                 if (selectedData.y !== null ) {
                     focus
                         .attr("cx", x(selectedData.x))
@@ -474,20 +473,23 @@ console.log("datamin is ", datamin);
                     tooltip_date.text(datefmt.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short',  year: 'numeric', hour:"2-digit", minute:"2-digit", second:"2-digit" }));
                     tooltip_name.text(field2);
                     tooltip_value.text(viz.formatWithPrecision(selectedData.y));
+                    if (selectedData.sev !== null) {
+                        tooltip_sev.html("<span class='thresholds_chart_viz-tooltip_colorbox' style='background-color:" + viz.getSeverityColor(selectedData.sev) + "'></span> " + selectedData.sev);
+                    } else {
+                        tooltip_sev.html("");
+                    }
                     tooltip_body.find(".thresholds_chart_viz-tooltip_extrarow").remove();
                     var tt_str = "";
                     // add details of the threhsolds here
                     for (var j = viz.thresholds[selectedData.row].sevs.length - 1; j >= 0; j--) {
-                        tt_str += "<tr class='thresholds_chart_viz-tooltip_extrarow'><td><span class='thresholds_chart_viz-tooltip_colorbox' style='background-color:" + viz.getSeverityColor(viz.thresholds[selectedData.row].sevs[j]) + "'></span> " + viz.thresholds[selectedData.row].sevs[j] + "</td><td class='thresholds_chart_viz-tooltip_th'>" + (j > 0 ? viz.formatWithPrecision(viz.thresholds[selectedData.row].stops[j - 1]) : "") + "</td></tr>";
+                        tt_str += "<tr class='thresholds_chart_viz-tooltip_extrarow'><td></td><td class='thresholds_chart_viz-tooltip_tcell'><span class='thresholds_chart_viz-tooltip_colorbox' style='background-color:" + viz.getSeverityColor(viz.thresholds[selectedData.row].sevs[j]) + "'></span> " + viz.thresholds[selectedData.row].sevs[j] + "</td><td class='thresholds_chart_viz-tooltip_th'>" + (j > 0 ? viz.formatWithPrecision(viz.thresholds[selectedData.row].stops[j - 1]) : "") + "</td></tr>";
                     }
                     tooltip_body.append($(tt_str));
-                    //console.log(viz.thresholds[selectedData.row], tt_str);
                     var top = y(selectedData.y);
-                    if (top - 80 < 0) {
-                        tooltip.css("top", top + 80);
-                    } else {
-                        tooltip.css("top", top - 80);
-                    }
+                    var tt_height = (50 + (viz.thresholds[selectedData.row].sevs.length * 22));
+                    //position the box about the middle, but limit when near top or bottom
+                    tooltip.css("top", Math.min((height - tt_height), Math.max(margin.top + 2, top - (tt_height / 2))));
+                    // show on the left or right of point depending on whcih side of the chart we are on
                     var left = x(selectedData.x);
                     if (left < width / 2){ 
                         tooltip.css({"left": left + 100, "right": ""});
@@ -506,26 +508,49 @@ console.log("datamin is ", datamin);
             // #################################################################################################################
             // Draw the overlay values
 
+            var overlay_text_height = Math.max(12, Math.min(60, height * 0.06));
             if (viz.config.summ_text !== "hide" && summary_count > 0) {
                 svg.append("text")
                     .style("pointer-events", "none")
-                    .attr("y", 30)
+                    .attr("font-size", overlay_text_height + "px")
+                    .attr("class",(viz.theme === 'light' ? "thresholds_chart_viz-overlaytext_light" : "thresholds_chart_viz-overlaytext_dark" ))
+                    .attr("y", 10 + overlay_text_height)
                     .attr("x", 20)
                     .text((viz.config.summ_text === "avg") ? "Average: " + viz.formatWithPrecision(summary_total / summary_count) : "Total: " + viz.formatWithPrecision(summary_total));
             }
             if (viz.config.last_text !== "hide") {
-                console.log("last",viz.data_processed[viz.data_processed.length-1]);
                 var top = y(viz.data_processed[viz.data_processed.length-1].y);
                 svg.append("text")
                     .style("pointer-events", "none")
                     .attr("text-anchor", "end")
+                    .attr("font-size", overlay_text_height + "px")
+                    .attr("class",(viz.theme === 'light' ? "thresholds_chart_viz-overlaytext_light" : "thresholds_chart_viz-overlaytext_dark" ))
                     .attr("width", 300)
-                    .attr("y", (top - 40 < 0) ? top + 40 : top - 40)
+                    .attr("y", (top > height / 2) ? top - overlay_text_height : top + overlay_text_height + overlay_text_height ) //Math.min((height - overlay_text_height), Math.max(margin.top + 2, top - (overlay_text_height / 2))))
                     .attr("x", x(viz.data_processed[viz.data_processed.length-1].x))
                     .text(viz.formatWithPrecision(viz.data_processed[viz.data_processed.length-1].y));
-                // TODO put a dot on the final point 
-            }
 
+                svg.append("circle")
+                    .style("pointer-events", "none")
+                    .attr("fill", "none")
+                    .attr("stroke-width", 3)
+                    .attr("stroke-opacity", 0.3)
+                    .attr("stroke", viz.config.line_color) 
+                    .attr("cx", function(d, i) { return x(viz.status_dots[viz.status_dots.length-1].x) })
+                    .attr("cy", function(d) { return y(viz.status_dots[viz.status_dots.length-1].y) })
+                    .attr("r", Number(viz.config.line_size) + 4)
+                    /*.node().animate([
+                        { transform: 'scale(1)', opacity: 1},
+                        { transform: 'scale(1.5)', opacity: .5 }
+                    ], {
+                        duration: 2000, //milliseconds
+                        easing: 'ease-in-out', //'linear', a bezier curve, etc.
+                        delay: 10, //milliseconds
+                        iterations: Infinity, //or a number
+                        direction: 'alternate', //'normal', 'reverse', etc.
+                        fill: 'forwards' //'backwards', 'both', 'none', 'auto'
+                    })*/ ;
+            }
         },
 
         // Override to respond to re-sizing events
