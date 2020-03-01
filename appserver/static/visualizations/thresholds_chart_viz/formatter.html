@@ -1,6 +1,6 @@
 <form class="splunk-formatter-section" section-label="General">
         <splunk-control-group label="Type" help="">
-                <splunk-radio-input name="{{VIZ_NAMESPACE}}.type" value="line">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.type" value="curve">
                         <option value="line">Line</option>
                         <option value="curve">Curved</option>
                         <option value="step">Stepped</option>
@@ -15,7 +15,7 @@
                 </splunk-radio-input>
         </splunk-control-group>
 
-        <splunk-control-group label="Status dots" help="">
+        <splunk-control-group label="Points" help="">
                 <splunk-radio-input name="{{VIZ_NAMESPACE}}.status_dots" value="hide">
                         <option value="show">Show</option>
                         <option value="hide">Hide</option>
@@ -62,9 +62,13 @@
                 </splunk-color-picker>
         </splunk-control-group>
 
-        <splunk-control-group label="Display precision" help="">
-                <splunk-select name="{{VIZ_NAMESPACE}}.textprecision" value="nolimit">
-                        <option value="nolimit">Not set</option>
+</form>
+
+<form class="splunk-formatter-section" section-label="Text formatting">
+
+        <splunk-control-group label="Precision" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.text_precision" value="-1">
+                        <option value="-1">Not set</option>
                         <option value="1">0</option>
                         <option value="2">0.0</option>
                         <option value="3">0.00</option>
@@ -73,8 +77,25 @@
                         <option value="6">0.00000</option>
                 </splunk-select>
         </splunk-control-group>
-</form>
 
+        <splunk-control-group label="Thousand seperators" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.text_thousands" value="no">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Unit" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.text_unit" value=""></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Unit position" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.text_unit_position" value="after">
+                        <option value="before">Before</option>
+                        <option value="after">After</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+</form>
 
 <form class="splunk-formatter-section" section-label="Bottom axis">
         <splunk-control-group label="Title" help="">

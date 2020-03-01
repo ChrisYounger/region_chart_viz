@@ -6,6 +6,25 @@
     display: block;
     position: absolute;
 }
+
+.thresholds_chart_viz-bad_data {
+    text-align: center;
+    color: #818d99;
+    line-height: 3;
+}
+.thresholds_chart_viz-xaxis,
+.thresholds_chart_viz-yaxis {
+    font-family: inherit;
+    font-size: 11px;
+}
+.thresholds_chart_viz-xaxis .domain,
+.thresholds_chart_viz-yaxis .tick:first-of-type line {
+    stroke: #c3cbd4;
+}
+.thresholds_chart_viz-yaxis .domain {
+    display: none;
+}
+
 .thresholds_chart_viz-tooltip {
     position: absolute;
     z-index: 10;
@@ -52,4 +71,18 @@
     font-weight: bold;
     fill: white;
     text-shadow: rgba(0,0,0,0.5) -1px -1px 0px, rgba(0,0,0,0.5) 1px -1px 0px, rgba(0,0,0,0.5) -1px 1px 0px, rgba(0,0,0,0.5) 1px 1px 0px;
+}
+
+
+.thresholds_chart_viz-pulse1 {
+    transform-box: fill-box;
+    transform: scale(0.5);
+    transform-origin: center center;
+    animation: thresholds_chart_viz-pulsekeyframe 3s linear infinite;
+}
+
+@keyframes thresholds_chart_viz-pulsekeyframe {
+    0% { stroke-width: 3; transform: scale(0.1); opacity: 1; }
+    60% { stroke-width: 0; transform: scale(4); opacity: 0; }
+    100% { stroke-width: 0; transform: scale(4); opacity: 0; }
 }
