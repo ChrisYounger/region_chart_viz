@@ -41,7 +41,10 @@
 .thresholds_chart_viz-tooltip_sev,
 .thresholds_chart_viz-tooltip_value {
     font-weight: bold;
-    padding-bottom: 10px;
+}
+.thresholds_chart_viz-tooltip_hr td {
+    height: 10px;
+    content: "\00a0";
 }
 .thresholds_chart_viz-tooltip_value,
 .thresholds_chart_viz-tooltip_tcell ,
