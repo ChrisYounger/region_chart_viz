@@ -1,3 +1,5 @@
+// TODO would be good to stop the lines (etc) from extending outside the canvas and over the axis
+// TODO tooltips cant hover on far left item
 define([
     'api/SplunkVisualizationBase',
     'api/SplunkVisualizationUtils',
@@ -188,8 +190,6 @@ function(
 
             var datamin_y = null;
             var datamax_y = null;
-            var datamin_x = null;
-            var datamax_x = null;
             var line;
             var just_gapped;
             var just_added;
@@ -197,12 +197,10 @@ function(
             var statusdotcolor;
             var summary_total = 0;
             var summary_count = 0;
-            var k,m,n,l,sevparts, record, limit_bottom, limit_top, col_width, skips, i, j, d, right, regions_arr;
+            var k,m,n,l,sevparts, record, limit_bottom, limit_top, col_width, skips, i, j, d, right, regions_arr, x_record;
             viz.column_names = [];
             viz.lines = [];
             viz.xAxisPositions = [];
-            viz.xAxisPositionsScaled = [];
-            viz.xaXisDataRefs = {};
             viz.line_data_last = null;
             viz.regions = [];
             viz.all_regions = [];
@@ -231,7 +229,7 @@ function(
                     line.color = viz.config.line_color;
                     line.dash = "";
                 } else if (viz.config.multi_series === "shaded") {
-                    line.color = tinycolor(viz.config.line_color).lighten(10 * m).toString();
+                    line.color = tinycolor(viz.config.line_color).lighten(15 * m).toString();
                     line.dash = (viz.config.line_size * 3) + ", " + viz.config.line_size;
                 } else {
                     line.color = viz.colors[m % viz.colors.length];
@@ -245,21 +243,21 @@ function(
                         row: k,
                         idx: (m - 1)
                     };
-                    if (viz.isTimechart) {
-                        record.x = new Date(viz.data.results[k][viz.column_names[0]]);
-                        record.x_formatted = (new Date(viz.data.results[k][viz.column_names[0]])).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short',  year: 'numeric', hour:"2-digit", minute:"2-digit", second:"2-digit" });
-                    } else {
-                        record.x = +viz.data.results[k][viz.column_names[0]];
-                        record.x_formatted = viz.data.results[k][viz.column_names[0]];
-                    }
-                    if (datamin_x === null) {
-                        datamin_x = record.x;
-                    }
-                    datamax_x = record.x;
                     // Only process the regions on the first iteration through
                     if (m === 1) {
                         // save a list of the possible x values for the tooltip
-                        viz.xAxisPositions.push(record.x);
+                        x_record = {
+                            x: record.x,
+                            data: []
+                        };
+                        viz.xAxisPositions.push(x_record);
+                        if (viz.isTimechart) {
+                            x_record.x = new Date(viz.data.results[k][viz.column_names[0]]);
+                            x_record.x_fmt = (new Date(viz.data.results[k][viz.column_names[0]])).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short',  year: 'numeric', hour:"2-digit", minute:"2-digit", second:"2-digit" });
+                        } else {
+                            x_record.x = +viz.data.results[k][viz.column_names[0]];
+                            x_record.x_fmt = viz.data.results[k][viz.column_names[0]];
+                        }
                         viz.regions[k] = {stops: [], sevs: [], colors: []};
                             if (viz.data.results[k].hasOwnProperty("regions") && $.trim(viz.data.results[k].regions) !== "") {
                                 regions_arr =  viz.htmlEncode(viz.data.results[k].regions.toLowerCase()).split(",");
@@ -285,7 +283,8 @@ function(
                                 }
                             }
                     }
-                    if (viz.data.results[k].hasOwnProperty(viz.column_names[m])) {
+                    // Treat NaN and blank values as though they dont exist
+                    if (viz.data.results[k].hasOwnProperty(viz.column_names[m]) && $.trim(viz.data.results[k][viz.column_names[m]]) !== "" && ! isNaN(viz.data.results[k][viz.column_names[m]])) {
                         record.y = (+ viz.data.results[k][viz.column_names[m]]);
                         // The summary text is only for the primary line
                         if (m === 1) {
@@ -331,7 +330,8 @@ function(
                     }
                     // do the data for the status dots
                     statusdotsev = null;
-                    statusdotcolor = null;
+                    // default to the series color
+                    statusdotcolor = line.color;
                     if (record.y !== null) {
                         for(n = 0; n < viz.regions[k].colors.length; n++) {
                             statusdotsev = viz.regions[k].sevs[n];
@@ -347,11 +347,8 @@ function(
                         if (m === 1 || viz.config.multi_series !== "shaded") {
                             line.status_dots.push(record);
                         }
-                        // Store a reference map to this element, keyed of the x value. This is for the tooltip
-                        if (! viz.xaXisDataRefs.hasOwnProperty("" + record.x)) {
-                            viz.xaXisDataRefs["" + record.x] = [];
-                        }
-                        viz.xaXisDataRefs["" + record.x].push(record);
+                        // Store a reference to this element. This is for the tooltip
+                        viz.xAxisPositions[k].data.push(record);
                         if (m === 1) {
                             viz.line_data_last = record;
                         }
@@ -363,7 +360,7 @@ function(
             // setup the d3 scales - bottom scale
             viz.xScale = viz.isTimechart ? d3.scaleTime() : d3.scaleLinear();
             //Instead of using d3.extent just use our own calculated values since we already went through the array
-            viz.xScale.rangeRound([0, viz.width]).domain([datamin_x, datamax_x]).nice();
+            viz.xScale.rangeRound([0, viz.width]).domain([viz.xAxisPositions[0].x, viz.xAxisPositions[viz.xAxisPositions.length - 1].x]).nice();
             viz.xAxis = d3.axisBottom(viz.xScale);
             // left scale
             viz.yScale = d3.scaleLinear().range([viz.height, 0]).domain([viz.config.min !== "" ? (+ viz.config.min) : datamin_y, viz.config.max !== "" ? (+ viz.config.max) : datamax_y]).nice();
@@ -376,13 +373,12 @@ function(
             // Precompute the x positions for the lines
             for (m = 0; m < viz.lines.length; m++) {
                 for (k = 0; k < viz.lines[m].line_data.length; k++) {
-                    viz.lines[m].line_data[k].x_scaled = viz.xScale(viz.lines[m].line_data[k].x);
                     viz.lines[m].line_data[k].y_scaled = viz.yScale(viz.lines[m].line_data[k].y);
                 }
             }
             // precompute the positions for the bottom axis
             for (m = 0; m < viz.xAxisPositions.length; m++) {
-                viz.xAxisPositionsScaled.push(viz.xScale(viz.xAxisPositions[m]));
+                viz.xAxisPositions[m].x_scaled = viz.xScale(viz.xAxisPositions[m].x);
             }
             // compute the threshold regions
             // use domain limits after nice-ing
@@ -390,8 +386,8 @@ function(
             limit_top = viz.yScale.domain()[1];
             col_width = 10;
             // determine the width of the first two blocks
-            if (viz.xAxisPositionsScaled.length > 1) {
-                col_width = viz.xAxisPositionsScaled[1] - viz.xAxisPositionsScaled[0];
+            if (viz.xAxisPositions.length > 1) {
+                col_width = viz.xAxisPositions[1].x_scaled - viz.xAxisPositions[0].x_scaled;
             }
             skips = 1;
             for (i = 0; i < viz.data.results.length; i += skips) {
@@ -405,17 +401,17 @@ function(
                 for (j = 0; j < viz.regions[i].colors.length; j++) {
                     d = {
                         "sev": viz.regions[i].colors[j],
-                        "left": viz.xAxisPositionsScaled[i],
+                        "left": viz.xAxisPositions[i].x_scaled,
                         "from": Math.min(Math.max(viz.yScale(j === 0 ? limit_bottom :  + viz.regions[i].stops[j-1]), 0), viz.height),
                         "to": Math.min(Math.max(viz.yScale(j >= viz.regions[i].stops.length ? limit_top : + viz.regions[i].stops[j]), 0), viz.height),
                     };
                     // its not a correct assumption that all blocks are the same size. need to calculate proper width here and not just the amount of columns
-                    if ((skips + i) >= viz.data.results.length) {
-                        right = viz.xAxisPositionsScaled[(viz.data.results.length - 1)] + col_width;
+                    if ((skips + i) >= viz.xAxisPositions.length) {
+                        right = viz.xAxisPositions[(viz.data.results.length - 1)].x_scaled + col_width;
                     } else {
-                        right = viz.xAxisPositionsScaled[(i+skips)];
+                        right = viz.xAxisPositions[(i+skips)].x_scaled;
                     }
-                    d.width = Math.max(Math.min(right, viz.width + 5) - d.left, 1);
+                    d.width = Math.max(Math.min(right, viz.width + 10) - d.left, 1);
                     d.height = d.from - d.to;
                     if (d.height > 0 && viz.regions[i].colors[j] !== "") {
                         viz.all_regions.push(d);
@@ -444,7 +440,7 @@ function(
                 viz.shadow_id = viz.instance_id + "_" + (viz.instance_id_ctr++);
                 var defs = svgmain.append("defs");
                 // height=120% so that the shadow is not clipped
-                var filter = defs.append("filter").attr("id", viz.shadow_id).attr("height", "120%");
+                var filter = defs.append("filter").attr("id", viz.shadow_id).attr("height", "120%").attr("filterUnits","userSpaceOnUse");
                 // From: http://bl.ocks.org/cpbotha/raw/5200394/dropshadow.js with tweaks.
                 filter.append("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2).attr("result", viz.shadow_id + "A");
                 filter.append("feColorMatrix").attr("in", viz.shadow_id + "A").attr("type","matrix").attr("values", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 " + (viz.config.shadow / 100) + " 0").attr("result", viz.shadow_id + "B");
@@ -518,7 +514,7 @@ function(
                 // Create a line function
                 viz.linepathbuilder = d3.line()
                     .defined(function(d) { return d.y !== null; })
-                    .x(function(d) { return d.x_scaled; })
+                    .x(function(d) { return viz.xAxisPositions[d.row].x_scaled; })
                     .y(function(d) { return d.y_scaled; });
                 
                 // add line curve or stepping if configured
@@ -594,10 +590,11 @@ function(
                 .join(function(enter){
                     return enter
                         .append("circle")
-                        .attr("fill", viz.config.line_color)
+                        // need to use the series colour
+                        .attr("fill", function(d) { return viz.lines[viz.lines.length - d.idx - 1].color; })
                         .attr("filter", "url(#" + viz.shadow_id + ")")
                         // These next two lines are here because sometimes new dots are created after inital draw and we dont want them flying across the screen.
-                        .attr("cx", function(d) { return d.x_scaled; })
+                        .attr("cx", function(d) { return viz.xAxisPositions[d.row].x_scaled; })
                         .attr("cy", function(d) { return d.y_scaled; })
                         .attr("r", viz.config.line_size);
                 }, function(update){
@@ -606,7 +603,7 @@ function(
                     return exit.remove();
                 }).transition()
                     .duration(viz.config.transition_time)
-                    .attr("cx", function(d) { return d.x_scaled; })
+                    .attr("cx", function(d) { return viz.xAxisPositions[d.row].x_scaled; })
                     .attr("cy", function(d) { return d.y_scaled; }); 
 
 
@@ -622,7 +619,7 @@ function(
                         return enter
                             .append("circle")
                             // These next two lines are here because sometimes new dots are created after inital draw and we dont want them flying across the screen.
-                            .attr("cx", function(d) { return d.x_scaled; })
+                            .attr("cx", function(d) { return viz.xAxisPositions[d.row].x_scaled; })
                             .attr("cy", function(d) { return d.y_scaled; })
                             .attr("r", viz.config.line_size);
                     }, function(update) {
@@ -632,7 +629,7 @@ function(
                     }).transition()
                         .duration(viz.config.transition_time)
                         .attr("fill", function(d){ return d.color === null ? viz.config.line_color : viz.getSeverityColor(d.color); })
-                        .attr("cx", function(d) { return d.x_scaled; })
+                        .attr("cx", function(d) { return viz.xAxisPositions[d.row].x_scaled; })
                         .attr("cy", function(d) { return d.y_scaled; });
             }
 
@@ -651,7 +648,7 @@ function(
                     .duration(viz.isFirstDraw ? 0 : viz.config.transition_time)
                     .style("visibility", "")
                     .attr("y", (last_text_top > viz.height / 2) ? last_text_top - viz.overlay_text_size : last_text_top + viz.overlay_text_size * 2 )
-                    .attr("x", viz.line_data_last.x_scaled)
+                    .attr("x", viz.xAxisPositions[viz.line_data_last.row].x_scaled)
                     .text(viz.formatWithPrecision(viz.line_data_last.y));
 
                 // if there isnt already status dots, then add a dot for the final element
@@ -660,7 +657,7 @@ function(
                         .transition()
                         .duration(viz.isFirstDraw ? 0 : viz.config.transition_time)
                         .style("visibility", "")
-                        .attr("cx", viz.line_data_last.x_scaled)
+                        .attr("cx", viz.xAxisPositions[viz.line_data_last.row].x_scaled)
                         .attr("cy", viz.line_data_last.y_scaled);
                 }
 
@@ -669,7 +666,7 @@ function(
                     .transition()
                     .duration(viz.isFirstDraw ? 0 : viz.config.transition_time)
                     .style("visibility", "")
-                    .attr("cx", viz.line_data_last.x_scaled)
+                    .attr("cx", viz.xAxisPositions[viz.line_data_last.row].x_scaled)
                     .attr("cy", viz.line_data_last.y_scaled);
             }
 
@@ -688,7 +685,7 @@ function(
                 var tooltip_body = tooltip.find("tbody");
 
                 // This allows to find the closest X index of the mouse:
-                var bisect = d3.bisector(function(d) { return d; }).left;
+                var bisect = d3.bisector(function(d) { return d.x; }).left;
 
                 // Create a rect on top of the svg area: this rectangle recovers mouse position
                 var overlay_rect = viz.svg.append("rect")
@@ -720,12 +717,12 @@ function(
                     var x0 = viz.xScale.invert(d3.mouse(this)[0]);
                     // determine what column of the chart is being hovered
                     var hoveredIdx = bisect(viz.xAxisPositions, x0, 1);
-                    var selectedData = viz.xaXisDataRefs["" + viz.xAxisPositions[hoveredIdx]];
                     tooltip_body.find(".region_chart_viz-tooltip_rows").remove();
-                    if (selectedData && selectedData.length > 0) {
+                    if (viz.xAxisPositions[hoveredIdx] && viz.xAxisPositions[hoveredIdx].data.length > 0) {
+                        var selectedData = viz.xAxisPositions[hoveredIdx].data;
                         // move the horizontal indicator
-                        focus.attr("x", selectedData[0].x_scaled);
-                        tooltip_date.text(selectedData[0].x_formatted);
+                        focus.attr("x", viz.xAxisPositions[selectedData[0].row].x_scaled);
+                        tooltip_date.text(viz.xAxisPositions[selectedData[0].row].x_fmt);
                         tt_str = [];
                         // basic protection against html injection
                         for (j = 0; j < selectedData.length; j++) {
@@ -753,10 +750,10 @@ function(
                         //position the box about the middle, but limit when near top or bottom
                         tooltip.css("top", Math.max(viz.margin.top + 2, Math.min((viz.height - tt_height), selectedData[0].y_scaled - (tt_height / 2))));
                         // show on the left or right of point depending on whcih side of the chart we are on
-                        if (selectedData[0].x_scaled < viz.width / 2){ 
-                            tooltip.css({"left": selectedData[0].x_scaled + 100, "right": ""});
+                        if (viz.xAxisPositions[selectedData[0].row].x_scaled < viz.width / 2){ 
+                            tooltip.css({"left": viz.xAxisPositions[selectedData[0].row].x_scaled + 100, "right": ""});
                         } else {
-                            tooltip.css({"left": "", "right": viz.width - selectedData[0].x_scaled + 80});
+                            tooltip.css({"left": "", "right": viz.width - viz.xAxisPositions[selectedData[0].row].x_scaled + 80});
                         }
                     }
                 })
