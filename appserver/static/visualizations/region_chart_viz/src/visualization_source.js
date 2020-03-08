@@ -14,7 +14,7 @@ function(
         initialize: function() {
             SplunkVisualizationBase.prototype.initialize.apply(this, arguments);
             var viz = this;
-            viz.instance_id = "thresholds_chart_viz_" + Math.round(Math.random() * 1000000);
+            viz.instance_id = "region_chart_viz_" + Math.round(Math.random() * 1000000);
             viz.instance_id_ctr = 0;
             viz.theme = 'light'; 
             if (typeof vizUtils.getCurerntTheme === "function") {
@@ -25,7 +25,7 @@ function(
                 viz.colors = vizUtils.getColorPalette("splunkCategorical", viz.theme);
             }
             viz.$container_wrap = $(viz.el);
-            viz.$container_wrap.addClass("thresholds_chart_viz-container");
+            viz.$container_wrap.addClass("region_chart_viz-container");
         },
 
         formatData: function(data) {
@@ -54,7 +54,7 @@ function(
                 text_thousands: "no",
                 text_unit: "",
                 text_unit_position: "after",
-                threshold_opacity: "35",
+                region_opacity: "35",
                 color_critical: "#B50101",
                 color_high: "#F26A35",
                 color_medium: "#FCB64E",
@@ -145,12 +145,12 @@ function(
             }
 
             if (viz.data.fields.length <= 1) {
-                viz.$container_wrap.empty().append("<div class='thresholds_chart_viz-bad_data'>Need at least 2 columns of data.<br /><a href='/app/thresholds_chart_viz/documentation' target='_blank'>Click here for examples and documentation</a></div>");
+                viz.$container_wrap.empty().append("<div class='region_chart_viz-bad_data'>Need at least 2 columns of data.<br /><a href='/app/region_chart_viz/documentation' target='_blank'>Click here for examples and documentation</a></div>");
                 return;
             }
 
             if (viz.data.results.length > (+viz.config.row_limit)) {
-                viz.$container_wrap.empty().append("<div class='thresholds_chart_viz-bad_data'>Too many data points (rows=" + viz.data.results.length + ", limit=" + viz.config.row_limit + ")<br /><a href='/app/thresholds_chart_viz/documentation' target='_blank'>Click here for examples and documentation</a></div>");
+                viz.$container_wrap.empty().append("<div class='region_chart_viz-bad_data'>Too many data points (rows=" + viz.data.results.length + ", limit=" + viz.config.row_limit + ")<br /><a href='/app/region_chart_viz/documentation' target='_blank'>Click here for examples and documentation</a></div>");
                 return;
             }
 
@@ -197,17 +197,17 @@ function(
             var statusdotcolor;
             var summary_total = 0;
             var summary_count = 0;
-            var k,m,n,l,sevparts, record, limit_bottom, limit_top, col_width, skips, i, j, d, right, thresholds_arr;
+            var k,m,n,l,sevparts, record, limit_bottom, limit_top, col_width, skips, i, j, d, right, regions_arr;
             viz.column_names = [];
             viz.lines = [];
             viz.xAxisPositions = [];
             viz.xAxisPositionsScaled = [];
             viz.xaXisDataRefs = {};
             viz.line_data_last = null;
-            viz.thresholds = [];
-            viz.threshold_regions = [];
+            viz.regions = [];
+            viz.all_regions = [];
             for (k = 0; k < viz.data.fields.length; k++) {
-                if (viz.data.fields[k].name !== "thresholds" && (viz.data.fields[k].name.substr(0,1) !== "_" || viz.data.fields[k].name === "_time")) {
+                if (viz.data.fields[k].name !== "regions" && (viz.data.fields[k].name.substr(0,1) !== "_" || viz.data.fields[k].name === "_time")) {
                     viz.column_names.push(viz.data.fields[k].name);
                 }
             }
@@ -232,7 +232,7 @@ function(
                     line.dash = "";
                 } else if (viz.config.multi_series === "shaded") {
                     line.color = tinycolor(viz.config.line_color).lighten(10 * m).toString();
-                    line.dash = (viz.config.line_size * 3) + ", " + (viz.config.line_size * 3);
+                    line.dash = (viz.config.line_size * 3) + ", " + viz.config.line_size;
                 } else {
                     line.color = viz.colors[m % viz.colors.length];
                     line.dash = "";
@@ -256,32 +256,32 @@ function(
                         datamin_x = record.x;
                     }
                     datamax_x = record.x;
-                    // Only process the thresholds on the first iteration through
+                    // Only process the regions on the first iteration through
                     if (m === 1) {
                         // save a list of the possible x values for the tooltip
                         viz.xAxisPositions.push(record.x);
-                        viz.thresholds[k] = {stops: [], sevs: [], colors: []};
-                            if (viz.data.results[k].hasOwnProperty("thresholds") && $.trim(viz.data.results[k].thresholds) !== "") {
-                                thresholds_arr =  viz.htmlEncode(viz.data.results[k].thresholds.toLowerCase()).split(",");
-                                if ((thresholds_arr.length % 2) === 1) {
+                        viz.regions[k] = {stops: [], sevs: [], colors: []};
+                            if (viz.data.results[k].hasOwnProperty("regions") && $.trim(viz.data.results[k].regions) !== "") {
+                                regions_arr =  viz.htmlEncode(viz.data.results[k].regions.toLowerCase()).split(",");
+                                if ((regions_arr.length % 2) === 1) {
                                     // only save these if they are valid (1 more severity than stops)
-                                    for (l = 0; l < thresholds_arr.length; l++){
+                                    for (l = 0; l < regions_arr.length; l++){
                                         // if its an odd element
                                         if (l % 2 === 1) {
-                                            viz.thresholds[k].stops.push(thresholds_arr[l]);
+                                            viz.regions[k].stops.push(regions_arr[l]);
                                         } else {
-                                            sevparts = thresholds_arr[l].split("=");
+                                            sevparts = regions_arr[l].split("=");
                                             if (sevparts.length === 2) {
-                                                viz.thresholds[k].sevs.push(sevparts[0]);
-                                                viz.thresholds[k].colors.push(sevparts[1]);
+                                                viz.regions[k].sevs.push(sevparts[0]);
+                                                viz.regions[k].colors.push(sevparts[1]);
                                             } else {
-                                                viz.thresholds[k].sevs.push(thresholds_arr[l]);
-                                                viz.thresholds[k].colors.push(thresholds_arr[l]);
+                                                viz.regions[k].sevs.push(regions_arr[l]);
+                                                viz.regions[k].colors.push(regions_arr[l]);
                                             }
                                         }
                                     }
-                                } else if (thresholds_arr.lenghh > 0) {
-                                    console.log("Line " + (k + 1) + ". Error thresholds should be an odd amount of records [" + viz.data.results[k].thresholds + "]");
+                                } else if (regions_arr.lenghh > 0) {
+                                    console.log("Line " + (k + 1) + ". Error regions should be an odd amount of records [" + viz.data.results[k].regions + "]");
                                 }
                             }
                     }
@@ -333,14 +333,14 @@ function(
                     statusdotsev = null;
                     statusdotcolor = null;
                     if (record.y !== null) {
-                        for(n = 0; n < viz.thresholds[k].colors.length; n++) {
-                            statusdotsev = viz.thresholds[k].sevs[n];
-                            statusdotcolor = viz.thresholds[k].colors[n];
-                            if (n >= viz.thresholds[k].stops.length || record.y < (+ viz.thresholds[k].stops[n])) {
+                        for(n = 0; n < viz.regions[k].colors.length; n++) {
+                            statusdotsev = viz.regions[k].sevs[n];
+                            statusdotcolor = viz.regions[k].colors[n];
+                            if (n >= viz.regions[k].stops.length || record.y < (+ viz.regions[k].stops[n])) {
                                 break;
                             }
                         }
-                        // status dots are still included if they are null (becuase column might not have thresholds). 
+                        // status dots are still included if they are null (becuase column might not have regions). 
                         // dots are not included if there is a gap in data
                         record.sev = statusdotsev;
                         record.color = statusdotcolor;
@@ -395,19 +395,19 @@ function(
             }
             skips = 1;
             for (i = 0; i < viz.data.results.length; i += skips) {
-                // if the thresholds are exactly the same for multiple rows then they will be collapsed (quick string comparison)
+                // if the regions are exactly the same for multiple rows then they will be collapsed (quick string comparison)
                 for (skips = 1; (i + skips) < viz.data.results.length; skips++) {
-                    if (viz.data.results[i].thresholds !== viz.data.results[(i + skips)].thresholds) {
+                    if (viz.data.results[i].regions !== viz.data.results[(i + skips)].regions) {
                         break;
                     }
                 }
                 // There should always be one more severity than there is stops
-                for (j = 0; j < viz.thresholds[i].colors.length; j++) {
+                for (j = 0; j < viz.regions[i].colors.length; j++) {
                     d = {
-                        "sev": viz.thresholds[i].colors[j],
+                        "sev": viz.regions[i].colors[j],
                         "left": viz.xAxisPositionsScaled[i],
-                        "from": Math.min(Math.max(viz.yScale(j === 0 ? limit_bottom :  + viz.thresholds[i].stops[j-1]), 0), viz.height),
-                        "to": Math.min(Math.max(viz.yScale(j >= viz.thresholds[i].stops.length ? limit_top : + viz.thresholds[i].stops[j]), 0), viz.height),
+                        "from": Math.min(Math.max(viz.yScale(j === 0 ? limit_bottom :  + viz.regions[i].stops[j-1]), 0), viz.height),
+                        "to": Math.min(Math.max(viz.yScale(j >= viz.regions[i].stops.length ? limit_top : + viz.regions[i].stops[j]), 0), viz.height),
                     };
                     // its not a correct assumption that all blocks are the same size. need to calculate proper width here and not just the amount of columns
                     if ((skips + i) >= viz.data.results.length) {
@@ -417,8 +417,8 @@ function(
                     }
                     d.width = Math.max(Math.min(right, viz.width + 5) - d.left, 1);
                     d.height = d.from - d.to;
-                    if (d.height > 0 && viz.thresholds[i].colors[j] !== "") {
-                        viz.threshold_regions.push(d);
+                    if (d.height > 0 && viz.regions[i].colors[j] !== "") {
+                        viz.all_regions.push(d);
                     }
                 }
             }
@@ -457,15 +457,15 @@ function(
                 viz.$container_wrap.append(svgmain.node());
 
                 // Create some svg groups to contain things
-                viz.xAxisGroup = viz.svg.append("g").attr("class","thresholds_chart_viz-xaxis").attr("transform", "translate(0," + viz.height + ")");
-                viz.yAxisGroup = viz.svg.append("g").attr("class","thresholds_chart_viz-yaxis");
-                viz.threshold_g = viz.svg.append("g").attr("class","thresholds_chart_viz-thresholds");
-                viz.lines_g = viz.svg.append("g").attr("class","thresholds_chart_viz-lines");
-                viz.orphan_dots_g = viz.svg.append("g").attr("class","thresholds_chart_viz-orphan_dots");
-                viz.status_dots_g = viz.svg.append("g").attr("class","thresholds_chart_viz-status_dots");
+                viz.xAxisGroup = viz.svg.append("g").attr("class","region_chart_viz-xaxis").attr("transform", "translate(0," + viz.height + ")");
+                viz.yAxisGroup = viz.svg.append("g").attr("class","region_chart_viz-yaxis");
+                viz.region_g = viz.svg.append("g").attr("class","region_chart_viz-regions");
+                viz.lines_g = viz.svg.append("g").attr("class","region_chart_viz-lines");
+                viz.orphan_dots_g = viz.svg.append("g").attr("class","region_chart_viz-orphan_dots");
+                viz.status_dots_g = viz.svg.append("g").attr("class","region_chart_viz-status_dots");
 
                 viz.summary_text = viz.svg.append("text")
-                    .attr("class", "thresholds_chart_viz-summary_text " + (viz.theme === 'light' ? "thresholds_chart_viz-overlaytext_light" : "thresholds_chart_viz-overlaytext_dark" ))
+                    .attr("class", "region_chart_viz-summary_text " + (viz.theme === 'light' ? "region_chart_viz-overlaytext_light" : "region_chart_viz-overlaytext_dark" ))
                     .attr("font-size", viz.overlay_text_size + "px")
                     .attr("y", 10 + viz.overlay_text_size)
                     .attr("x", 20)
@@ -473,7 +473,7 @@ function(
                     .style("visibility", "hidden");
 
                 viz.last_text = viz.svg.append("text")
-                    .attr("class", "thresholds_chart_viz-last_text " + (viz.theme === 'light' ? "thresholds_chart_viz-overlaytext_light" : "thresholds_chart_viz-overlaytext_dark" ))
+                    .attr("class", "region_chart_viz-last_text " + (viz.theme === 'light' ? "region_chart_viz-overlaytext_light" : "region_chart_viz-overlaytext_dark" ))
                     .attr("text-anchor", "end")
                     .attr("font-size", viz.overlay_text_size + "px")
                     .attr("width", 300)
@@ -481,7 +481,7 @@ function(
                     .style("visibility", "hidden");
 
                 viz.last_dot = viz.svg.append("circle")
-                    .attr("class","thresholds_chart_viz-last_dot")
+                    .attr("class","region_chart_viz-last_dot")
                     .attr("fill", viz.config.line_color)
                     .attr("stroke-width", 3)
                     .attr("stroke", viz.config.line_color)
@@ -490,7 +490,7 @@ function(
                     .style("pointer-events", "none");
 
                 viz.last_dot_pulse = viz.svg.append("circle")
-                    .attr("class","thresholds_chart_viz-pulse1")
+                    .attr("class","region_chart_viz-pulse1")
                     .attr("fill", "none")
                     .attr("stroke", viz.config.line_color)
                     .attr("r", Number(viz.config.line_size))
@@ -547,8 +547,8 @@ function(
                 });
 
             // add the threshold regions underneath
-            viz.threshold_g.selectAll("rect")
-                .data(viz.threshold_regions)
+            viz.region_g.selectAll("rect")
+                .data(viz.all_regions)
                 .join(function(enter){
                     return enter.append("rect");
                 }, function(update){
@@ -558,7 +558,7 @@ function(
                 }).transition()
                     .duration(viz.isFirstDraw ? 0 : viz.config.transition_time)
                     .attr("fill", function(d) { return viz.getSeverityColor(d.sev); })
-                    .attr("opacity", viz.config.threshold_opacity / 100)
+                    .attr("opacity", viz.config.region_opacity / 100)
                     .attr("x", function(d) { return d.left; })
                     .attr("y", function(d) { return d.to; })
                     .attr("width", function(d) { return d.width; })
@@ -569,7 +569,7 @@ function(
             viz.lines_g.selectAll("path")
                 .data(viz.lines)
                 .join(function(enter){
-                    return enter.append("path").attr("class","thresholds_chart_viz-line").attr("filter", "url(#" + viz.shadow_id + ")");
+                    return enter.append("path").attr("class","region_chart_viz-line").attr("filter", "url(#" + viz.shadow_id + ")");
                 }, function(update){
                     return update;
                 }, function(exit){
@@ -683,8 +683,8 @@ function(
             //                          |_|    
 
             if (viz.isFirstDraw) {
-                var tooltip = $("<div class=\"thresholds_chart_viz-tooltip\"><table><tbody><tr><td colspan=\"3\" class=\"thresholds_chart_viz-tooltip_date\"></td></tr></tbody></table></div>").appendTo(viz.$container_wrap);
-                var tooltip_date = tooltip.find(".thresholds_chart_viz-tooltip_date");
+                var tooltip = $("<div class=\"region_chart_viz-tooltip\"><table><tbody><tr><td colspan=\"3\" class=\"region_chart_viz-tooltip_date\"></td></tr></tbody></table></div>").appendTo(viz.$container_wrap);
+                var tooltip_date = tooltip.find(".region_chart_viz-tooltip_date");
                 var tooltip_body = tooltip.find("tbody");
 
                 // This allows to find the closest X index of the mouse:
@@ -692,7 +692,7 @@ function(
 
                 // Create a rect on top of the svg area: this rectangle recovers mouse position
                 var overlay_rect = viz.svg.append("rect")
-                    .attr("class","thresholds_chart_viz-tt_overlay")
+                    .attr("class","region_chart_viz-tt_overlay")
                     .attr("width", viz.width)
                     .attr("height", viz.height)
                     .style("fill", "none")
@@ -701,7 +701,7 @@ function(
                 // Create the line that shows what points are hovered
                 var focus = viz.svg
                     .append("rect")
-                    .attr("class","thresholds_chart_viz-tt_focus_ring")
+                    .attr("class","region_chart_viz-tt_focus_ring")
                     .attr("stroke", "black")
                     .attr("stroke-opacity", 0.3)
                     .attr("stroke-width", 1)
@@ -721,7 +721,7 @@ function(
                     // determine what column of the chart is being hovered
                     var hoveredIdx = bisect(viz.xAxisPositions, x0, 1);
                     var selectedData = viz.xaXisDataRefs["" + viz.xAxisPositions[hoveredIdx]];
-                    tooltip_body.find(".thresholds_chart_viz-tooltip_rows").remove();
+                    tooltip_body.find(".region_chart_viz-tooltip_rows").remove();
                     if (selectedData && selectedData.length > 0) {
                         // move the horizontal indicator
                         focus.attr("x", selectedData[0].x_scaled);
@@ -729,22 +729,22 @@ function(
                         tt_str = [];
                         // basic protection against html injection
                         for (j = 0; j < selectedData.length; j++) {
-                            tt_str.push("<tr class=\"thresholds_chart_viz-tooltip_rows\">" + 
-                                "<td class=\"thresholds_chart_viz-tooltip_name\">" + (viz.lines.length > 1 ? "<span class='thresholds_chart_viz-tooltip_colorbox' style='background-color:" + viz.lines[viz.lines.length - selectedData[j].idx - 1].color + "'></span> " : "") + 
+                            tt_str.push("<tr class=\"region_chart_viz-tooltip_rows\">" + 
+                                "<td class=\"region_chart_viz-tooltip_name\">" + (viz.lines.length > 1 ? "<span class='region_chart_viz-tooltip_colorbox' style='background-color:" + viz.lines[viz.lines.length - selectedData[j].idx - 1].color + "'></span> " : "") + 
                                 viz.htmlEncode(viz.lines[viz.lines.length - selectedData[j].idx - 1].name) + "</td>"+
-                                "<td class=\"thresholds_chart_viz-tooltip_sev\">" + 
-                                    ((selectedData[j].sev !== null) ? "<span class='thresholds_chart_viz-tooltip_colorbox' style='background-color:" + viz.getSeverityColor(selectedData[j].color) + "'></span> " + selectedData[j].sev : "") + 
+                                "<td class=\"region_chart_viz-tooltip_sev\">" + 
+                                    ((selectedData[j].sev !== null) ? "<span class='region_chart_viz-tooltip_colorbox' style='background-color:" + viz.getSeverityColor(selectedData[j].color) + "'></span> " + selectedData[j].sev : "") + 
                                 "</td>"+
-                                "<td class=\"thresholds_chart_viz-tooltip_value\">" + viz.formatWithPrecision(selectedData[j].y) + "</td>"+
+                                "<td class=\"region_chart_viz-tooltip_value\">" + viz.formatWithPrecision(selectedData[j].y) + "</td>"+
                                 "</tr>");
                         }
-                        tt_str.push("<tr class=\"thresholds_chart_viz-tooltip_hr thresholds_chart_viz-tooltip_rows\"><td colspan=\"3\"> </td></tr>");
-                        // add details of the thresholds here
-                        for (j = viz.thresholds[selectedData[0].row].sevs.length - 1; j >= 0; j--) {
-                            tt_str.push("<tr class='thresholds_chart_viz-tooltip_rows'>"+
+                        tt_str.push("<tr class=\"region_chart_viz-tooltip_hr region_chart_viz-tooltip_rows\"><td colspan=\"3\"> </td></tr>");
+                        // add details of the regions here
+                        for (j = viz.regions[selectedData[0].row].sevs.length - 1; j >= 0; j--) {
+                            tt_str.push("<tr class='region_chart_viz-tooltip_rows'>"+
                                     "<td></td>"+
-                                    "<td class='thresholds_chart_viz-tooltip_tcell'><span class='thresholds_chart_viz-tooltip_colorbox' style='background-color:" + viz.getSeverityColor(viz.thresholds[selectedData[0].row].colors[j]) + "'></span> " + viz.thresholds[selectedData[0].row].sevs[j] + "</td>"+
-                                    "<td class='thresholds_chart_viz-tooltip_th'>" + (j > 0 ? viz.formatWithPrecision(viz.thresholds[selectedData[0].row].stops[j - 1]) : "") + "</td>"+
+                                    "<td class='region_chart_viz-tooltip_tcell'><span class='region_chart_viz-tooltip_colorbox' style='background-color:" + viz.getSeverityColor(viz.regions[selectedData[0].row].colors[j]) + "'></span> " + viz.regions[selectedData[0].row].sevs[j] + "</td>"+
+                                    "<td class='region_chart_viz-tooltip_th'>" + (j > 0 ? viz.formatWithPrecision(viz.regions[selectedData[0].row].stops[j - 1]) : "") + "</td>"+
                                 "</tr>");
                         }
                         $(tt_str.join("")).appendTo(tooltip_body);

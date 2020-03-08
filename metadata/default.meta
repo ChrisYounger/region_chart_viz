@@ -1,41 +1,13 @@
 
 # Application-level permissions
-
 []
 access = read : [ * ], write : [ admin, power ]
 
-### EVENT TYPES
-
-[eventtypes]
-export = system
-
-
-### PROPS
-
-[props]
-export = system
-
-
-### TRANSFORMS
-
-[transforms]
-export = system
-
-
-### LOOKUPS
-
-[lookups]
-export = system
-
-
-### VIEWSTATES: even normal users should be able to create shared viewstates
-
+# documentation view should be globally readable
 [viewstates]
-access = read : [ * ], write : [ * ]
+access = read : [ * ], write : [ admin ]
 export = system
 
-### Visualizations
-
-# Un-comment the stanza below to make the standin visualization available to all apps.
-[visualizations/thresholds_chart_viz]
+# export viz globally
+[visualizations/region_chart_viz]
 export = system

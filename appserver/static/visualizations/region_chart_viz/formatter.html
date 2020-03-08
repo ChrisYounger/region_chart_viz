@@ -22,7 +22,7 @@
                 </splunk-radio-input>
         </splunk-control-group>
 
-        <splunk-control-group label="Extra lines" help="">
+        <splunk-control-group label="Subsequent lines" help="Requires mulitple series of data">
                 <splunk-radio-input name="{{VIZ_NAMESPACE}}.multi_series" value="shaded">
                         <option value="shaded">Lighten &amp; dash</option>
                         <option value="colored">Color</option>
@@ -34,7 +34,7 @@
                 <span style="display:inline-block; margin:5px 15px 5px 5px;">px</span>
         </splunk-control-group>
 
-        <splunk-control-group label="Line shadow strength" help="0 to disable">
+        <splunk-control-group label="Line shadow opacity" help="0 to disable">
                 <splunk-text-input name="{{VIZ_NAMESPACE}}.shadow" value="20" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
                 <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
         </splunk-control-group>
@@ -57,6 +57,11 @@
                         <splunk-color>#0178c7</splunk-color>
                         <splunk-color>#ecbc1b</splunk-color>
                 </splunk-color-picker>
+        </splunk-control-group>
+
+        <splunk-control-group label="Region opacity" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.region_opacity" value="35" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
         </splunk-control-group>
 </form>
 
@@ -150,13 +155,9 @@
 </form>
 
 
+<!--
+<form class="splunk-formatter-section" section-label="Regions">
 
-<form class="splunk-formatter-section" section-label="Thresholds">
-
-        <splunk-control-group label="Opacity" help="">
-                <splunk-text-input name="{{VIZ_NAMESPACE}}.threshold_opacity" value="35" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
-                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
-        </splunk-control-group>
 
         <splunk-control-group label="Critical" help="">
                 <splunk-color-picker name="{{VIZ_NAMESPACE}}.color_critical" value="#B50101" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
@@ -277,17 +278,17 @@
                         <splunk-color>#ecbc1b</splunk-color>
                 </splunk-color-picker>
         </splunk-control-group>
-</form>
+</form> -->
 
 
 <form class="splunk-formatter-section" section-label="Help">
         <splunk-control-group label=" " help="">
                 <div style="margin:40px 10px 10px -100px">
-                        <div>Expects data from timechart command. Thresholds should be in a field named <code>thresholds</code>. See documentation for more details.</div>
-                        <div style="margin-top:20px;">Example query:</div>
+                        <div>Expects data from timechart command. Regions should be in a field named <code>regions</code>. See documentation for more details.</div>
+                        <div style="margin-top:30px;">Example query:</div>
                         <div style="margin-top:10px;"><code>... | timechart count </code></div>
-                        <div><code>| eval thresholds = if(_time > (now() - 300) ,"Data still arriving=#cccccc","") </code></div>
-                        <div style="margin-top:30px;"><a href="/app/thresholds_chart_viz/documentation" target="_blank">Examples and Documentation</a></div>
+                        <div><code>| eval regions = if(_time > (now() - 300) ,"Data still arriving=#cccccc","") </code></div>
+                        <div style="margin-top:30px;"><a href="/app/region_chart_viz/documentation" target="_blank">Examples and Documentation</a></div>
                         <div style="margin-top:40px;">By Chris Younger - <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds" target="_blank">My other apps</a></div>
                 </div> 
         </splunk-control-group>

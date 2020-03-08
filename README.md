@@ -1,5 +1,5 @@
-![screenshot](https://raw.githubusercontent.com/ChrisYounger/circlepack_viz/master/appserver/static/demo.png)
+![screenshot](https://raw.githubusercontent.com/ChrisYounger/region_chart_viz/master/appserver/static/demo.png)
 
-# Thresholds chart viz
+# region_chart_viz
 
 TODO

@@ -1,0 +1,200 @@
+<form theme="light">
+  <label>Region Chart Viz - Documentation</label>
+  <search id="base1">
+    <query>| makeresults   
+| eval raw = "
+index=\"_internal\" sourcetype=\"scheduler\" log_level=\"INFO\" component=\"SavedSearchHistory\"  count=\"8\" ###
+index=\"_internal\" sourcetype=\"scheduler\" log_level=\"INFO\" component=\"SavedSplunker\"  count=\"29\" ###
+index=\"_internal\" sourcetype=\"splunk_web_service\" log_level=\"ERROR\" component=\"config\"  count=\"1\" ###
+index=\"_internal\" sourcetype=\"splunk_web_service\" log_level=\"ERROR\" component=\"utility\"  count=\"1\" ###
+index=\"_internal\" sourcetype=\"splunk_web_service\" log_level=\"INFO\" component=\"__init__\"  count=\"16\" ###
+index=\"_internal\" sourcetype=\"splunk_web_service\" log_level=\"INFO\" component=\"admin\"  count=\"1\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"IndexConfig\"  count=\"16\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"InstalledFilesHashChecker\"  count=\"4\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"IntrospectionGenerator:resource_usage\"  count=\"2\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"ProcessTracker\"  count=\"30\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"SHCConfig\"  count=\"2\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"TelemetryHandler\"  count=\"1\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"WatchdogInit\"  count=\"4\" ###
+index=\"_internal\" sourcetype=\"splunkd\" log_level=\"WARN\" component=\"X509Verify\"  count=\"2\" ###
+index=\"_internal\" sourcetype=\"splunkd_conf\" log_level=\"INFO\" component=\"ConfDeployment\"  count=\"2\"
+"
+| makemv delim="###" raw
+| mvexpand raw 
+| rename raw  as  _raw 
+| extract | table index sourcetype log_level component count</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>  
+  <row>
+    <panel>
+      <html>
+<style>
+.table td, .table th {
+  vertical-align: middle;
+  text-align: center;
+}
+.highlight { white-space:nowrap; }
+</style>
+<div style="max-width: 1200px; margin: 0 auto;">
+<h2>Region Chart Viz</h2>
+<p>A line chart visualization that supports data-driven, colored regions.</p>
+
+<p>Can be used to visualize:</p>
+<ul>
+  <li>configured thresholds</li>
+  <li>the spread of data (for example using standard deviation/interquartile range)</li>
+  <li>where data might be incomplete (because its still arriving)</li>
+  <li>maintenance periods</li>
+  <li>business hours</li>
+</ul>
+<p>Allows for important context to be giving to a line chart. Built with D3.</p>
+
+<p>See also "Get ITSI Thresholds" ( https://splunkbase.splunk.com/app/4910/ ) - a custom command to retrieve ITSI time-based thresholds.</p>
+<p>Copyright (C) 2020 Chris Younger. I am a Splunk Professional Services consultant working for JDS Australia, in Brisbane Australia.</p>
+<p><a href="https://splunkbase.splunk.com/app/4911/#/details">Splunkbase</a> | <a href="https://github.com/ChrisYounger/region_chart_viz">Source code</a> | <a href="https://answers.splunk.com/app/questions/4911.html">Questions, Bugs or Suggestions</a> | <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds">My Splunk apps</a></p>
+
+<br /><br /><br /><br />
+
+<h2>Usage</h2>
+<p>This visualisation should work with any data that works with the Splunk built-in line chart. The first column (which is often "_time") will be the X-axis and subsequent columns will be rendered as lines (so they should be numeric values). 
+A column with the specific name "regions" should be supplied which dictates the regions to draw behind the chart. </p>
+
+<p>Regions are only drawn on the chart in the vertical direction from bottom to top. However with a proper understanding of data horizontal regions can be drawn.</p>
+
+<p>The format for the region field is comma-seperated key-value pairs and best explained with examples:</p>
+<table border="1" class="table">
+<thead>
+<tr>
+<th>"regions" field</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><pre class="highlight"><code>red</code></pre></td>
+<td>The most basic example that creates a region. A red column of data will be drawn from the bottom of the chart to the top of chart. Region colors can be specificed as valid HTML colours (RBG, Hex, named colours, etc..). Note that the </td>
+</tr>
+<tr>
+<td><pre class="highlight"><code>Out of hours=#ccccc</code></pre></td>
+<td>Create a named region in a grey color for the chart column. This name will be seen on the tooltip when hovering the chart.</td>
+</tr>
+<tr>
+<td><pre class="highlight"><code>green,1000,orange,1500,red</code></pre></td>
+<td>Create a green region from the bottom of the chart to 1000, an orange region from 1000 to 1500 and a red region from 1500 to the top of the chart.</td>
+</tr>
+<tr>
+<td><pre class="highlight"><code>,1000,Warning=orange,1500,Critical=red</code></pre></td>
+<td>Create a orange region from 1000 to 1500 and a red region from 1500 to the top of the chart.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Examples:</h2>
+
+
+<p>Show where data is less than 5 minutes old</p>
+<img alt="" src="/static/app/circlepack_viz/example1.png" />
+<pre class="highlight"><code>TODO</code></pre>
+
+<p>Show business hours</p>
+<img alt="" src="/static/app/circlepack_viz/example2.png" />
+<pre class="highlight"><code>TODO</code></pre>
+
+<p>Show computed ITSI thresholds</p>
+<img alt="" src="/static/app/circlepack_viz/example3.png" />
+<pre class="highlight"><code>TODO</code></pre>
+
+<p>Show static thresholds</p>
+<img alt="" src="/static/app/circlepack_viz/example4.png" />
+<pre class="highlight"><code>TODO</code></pre>
+
+<p>Historical trend line with stddev</p>
+<img alt="" src="/static/app/circlepack_viz/example5.png" />
+<pre class="highlight"><code>TODO</code></pre>
+
+
+
+<br /><br /><br /><br />
+
+<h2>Third party software</h2>
+<p>The following third-party libraries are used by this app. Thank you!</p>
+<ul>
+<li>jQuery - MIT - <a href="https://jquery.com/">https://jquery.com/</a></li>
+<li>D3 - BSD 3-Clause - <a href="https://d3js.org/">https://d3js.org/</a></li>
+<li>TinyColor - MIT - <a href="https://github.com/bgrins/TinyColor">https://github.com/bgrins/TinyColor</a></li>
+<li>Font Awesome - Creative Commons Attribution-ShareAlike 4.0 License - <a href="https://fontawesome.com/">https://fontawesome.com/</a></li>
+</ul>
+
+<br /><br /><br /><br />
+
+</div>
+</html>
+    </panel>
+    <panel>
+      <viz type="circlepack_viz.circlepack_viz">
+        <search base="base1">
+          <query>| stats sum(count) as count by sourcetype component</query>
+        </search>
+        <title>Simple Example</title>
+        <option name="circlepack_viz.circlepack_viz.color">schemeCategory10</option>
+        <option name="circlepack_viz.circlepack_viz.colormode">parent</option>
+        <option name="circlepack_viz.circlepack_viz.labelcolor">#ffffff</option>
+        <option name="circlepack_viz.circlepack_viz.labels">show</option>
+        <option name="circlepack_viz.circlepack_viz.labelsize">100</option>
+        <option name="circlepack_viz.circlepack_viz.mode">static</option>
+        <option name="circlepack_viz.circlepack_viz.onclick">none</option>
+        <option name="circlepack_viz.circlepack_viz.packing">circle</option>
+        <option name="circlepack_viz.circlepack_viz.shadow">show</option>
+        <option name="drilldown">none</option>
+        <option name="height">600</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>    
+      <viz type="circlepack_viz.circlepack_viz">
+        <search base="base1">
+          <query>| stats sum(count) as count by log_level component | eval log_level = if(log_level=="WARNING", "WARN", log_level)</query>
+        </search>
+        <title>Example setting colors in the formatting options</title>
+        <option name="circlepack_viz.circlepack_viz.color">interpolateGreys</option>
+        <option name="circlepack_viz.circlepack_viz.colormode">size</option>
+        <option name="circlepack_viz.circlepack_viz.coloroverride">INFO,#1a9035,ERROR,#b22b32,WARN,#AF5300</option>
+        <option name="circlepack_viz.circlepack_viz.labelcolor">#000000</option>
+        <option name="circlepack_viz.circlepack_viz.labels">show</option>
+        <option name="circlepack_viz.circlepack_viz.labelsize">100</option>
+        <option name="circlepack_viz.circlepack_viz.mode">static</option>
+        <option name="circlepack_viz.circlepack_viz.onclick">zoom</option>
+        <option name="circlepack_viz.circlepack_viz.packing">circle</option>
+        <option name="circlepack_viz.circlepack_viz.shadow">show</option>
+        <option name="drilldown">none</option>
+        <option name="height">800</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+      <viz type="circlepack_viz.circlepack_viz">
+        <search base="base1">
+          <query>| stats sum(count) as count by log_level component | eval log_level = case(log_level=="ERROR", "#b22b32",log_level=="INFO", "#1a9035",log_level=="WARN" OR log_level=="WARNING", "#AF5300", true(), "blue")| table  log_level component count | search NOT component="root"</query>
+        </search>
+        <title>Example setting colors in the search query</title>
+        <option name="circlepack_viz.circlepack_viz.color">schemeCategory10</option>
+        <option name="circlepack_viz.circlepack_viz.colormode">firstdatacodes</option>
+        <option name="circlepack_viz.circlepack_viz.labelcolor">#000000</option>
+        <option name="circlepack_viz.circlepack_viz.labels">show</option>
+        <option name="circlepack_viz.circlepack_viz.labelsize">80</option>
+        <option name="circlepack_viz.circlepack_viz.mode">static</option>
+        <option name="circlepack_viz.circlepack_viz.onclick">none</option>
+        <option name="circlepack_viz.circlepack_viz.packing">random</option>
+        <option name="circlepack_viz.circlepack_viz.shadow">hide</option>
+        <option name="drilldown">none</option>
+        <option name="height">800</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+    </panel>
+  </row>
+</form>

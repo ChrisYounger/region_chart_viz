@@ -1,2 +1,22 @@
 [default]
-default.visualizations.custom.thresholds_chart_viz.thresholds_chart_viz.onclick = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.type = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.nulls = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.last_text = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.summ_text = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.xtitle_show = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.xtitle_text = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.ytitle_show = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.status_dots = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.ytitle_text = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.multi_series = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.line_size = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.shadow = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.line_color = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.min = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.max = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.text_precision = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.text_thousands = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.text_unit = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.text_unit_position = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.region_opacity = <string>
+default.visualizations.custom.region_chart_viz.region_chart_viz.row_limit = <string>
