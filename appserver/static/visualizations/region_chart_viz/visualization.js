@@ -45,7 +45,6 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// TODO would be good to stop the lines (etc) from extending outside the canvas and over the axis
-	// TODO tooltips cant hover on far left item
 	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 	    __webpack_require__(1),
 	    __webpack_require__(2),
@@ -729,9 +728,6 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                var tooltip_date = tooltip.find(".region_chart_viz-tooltip_date");
 	                var tooltip_body = tooltip.find("tbody");
 
-	                // This allows to find the closest X index of the mouse:
-	                var bisect = d3.bisector(function(d) { return d.x; }).left;
-
 	                // Create a rect on top of the svg area: this rectangle recovers mouse position
 	                var overlay_rect = viz.svg.append("rect")
 	                    .attr("class","region_chart_viz-tt_overlay")
@@ -759,9 +755,20 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                })
 	                .on("mousemove", function() {
 	                    var j, tt_str = [], tt_height;
-	                    var x0 = viz.xScale.invert(d3.mouse(this)[0]);
-	                    // determine what column of the chart is being hovered
-	                    var hoveredIdx = bisect(viz.xAxisPositions, x0, 1);
+	                    var mouse_x = d3.mouse(this)[0];
+	                    var hoveredIdx = 0;
+	                    var curr = viz.xAxisPositions[hoveredIdx].x_scaled;
+	                    var diff = Math.abs (mouse_x - curr);
+	                    // Find the nearest point to the mouse cursor on the horizontal axis
+	                    for (var val = 0; val < viz.xAxisPositions.length; val++) {
+	                        var newdiff = Math.abs (mouse_x - viz.xAxisPositions[val].x_scaled);
+	                        if (newdiff < diff) {
+	                            diff = newdiff;
+	                            curr = viz.xAxisPositions[val].x_scaled;
+	                            hoveredIdx = val;
+	                        }
+	                    }
+
 	                    tooltip_body.find(".region_chart_viz-tooltip_rows").remove();
 	                    if (viz.xAxisPositions[hoveredIdx] && viz.xAxisPositions[hoveredIdx].data.length > 0) {
 	                        var selectedData = viz.xAxisPositions[hoveredIdx].data;
