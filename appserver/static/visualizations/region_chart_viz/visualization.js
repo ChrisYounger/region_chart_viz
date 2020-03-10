@@ -45,6 +45,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// TODO would be good to stop the lines (etc) from extending outside the canvas and over the axis
+	// TODO could regions be coloured as gradients?
 	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 	    __webpack_require__(1),
 	    __webpack_require__(2),
@@ -296,15 +297,15 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                        };
 	                        viz.xAxisPositions.push(x_record);
 	                        if (viz.isTimechart) {
-	                            x_record.x = new Date(viz.data.results[k][viz.column_names[0]]);
-	                            x_record.x_fmt = (new Date(viz.data.results[k][viz.column_names[0]])).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short',  year: 'numeric', hour:"2-digit", minute:"2-digit", second:"2-digit" });
+	                            x_record.x = vizUtils.parseTimestamp(viz.data.results[k][viz.column_names[0]]);
+	                            x_record.x_fmt = x_record.x.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short',  year: 'numeric', hour:"2-digit", minute:"2-digit", second:"2-digit" });
 	                        } else {
 	                            x_record.x = +viz.data.results[k][viz.column_names[0]];
 	                            x_record.x_fmt = viz.data.results[k][viz.column_names[0]];
 	                        }
 	                        viz.regions[k] = {stops: [], sevs: [], colors: []};
 	                            if (viz.data.results[k].hasOwnProperty("regions") && $.trim(viz.data.results[k].regions) !== "") {
-	                                regions_arr =  viz.htmlEncode(viz.data.results[k].regions.toLowerCase()).split(",");
+	                                regions_arr =  viz.htmlEncode(viz.data.results[k].regions).split(",");
 	                                if ((regions_arr.length % 2) === 1) {
 	                                    // only save these if they are valid (1 more severity than stops)
 	                                    for (l = 0; l < regions_arr.length; l++){
