@@ -164,8 +164,7 @@
                 <div style="margin:40px 10px 10px -100px">
                         <div>Expects data from timechart command. Regions should be in a field named <code>regions</code>. See documentation for more details.</div>
                         <div style="margin-top:30px;">Example query:</div>
-                        <div style="margin-top:10px;"><code>... | timechart count </code></div>
-                        <div><code>| eval regions = if(_time > (now() - 300) ,"Data still arriving=#cccccc","") </code></div>
+                        <div style="margin-top:10px;"><code>... | timechart count </br> | eval regions = "normal=#99D18B,50,Warning=#FCB64E,70,Error=#B50101"</code></div>
                         <div style="margin-top:30px;"><a href="/app/region_chart_viz/documentation?hideAppBar=true" target="_blank">Examples and Documentation</a></div>
                         <div style="margin-top:40px;">By Chris Younger - <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds" target="_blank">My other apps</a></div>
                 </div> 
