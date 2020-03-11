@@ -34,7 +34,7 @@
   <li>maintenance periods</li>
   <li>business hours</li>
 </ul>
-<p>Allows for important context to be giving to a line chart. Built with D3.</p>
+<p>Provide valuable context to your line charts. Built with D3.</p>
 
 <p>See also "Get ITSI Thresholds" ( <a href="https://splunkbase.splunk.com/app/4910/" target="_blank">https://splunkbase.splunk.com/app/4910/</a> ) - a custom command to retrieve ITSI time-based thresholds.</p>
 <p>Copyright (C) 2020 Chris Younger. I am a Splunk Professional Services consultant working for JDS Australia, in Brisbane Australia.</p>
@@ -49,7 +49,7 @@
 
 <h2>Usage</h2>
 <p>This visualisation should work with any data that works with the Splunk built-in line chart. The first column (which is often "_time") will be the X-axis and subsequent columns will be rendered as lines (so they should be numeric values). 
-A column with the specific name <code class="highlight">regions</code> should be supplied which defines the regions to draw behind the chart. </p>
+A column with the specific name <code class="highlight">regions</code> defines the colored regions to draw behind the chart. </p>
 
 <img alt="" src="/static/app/region_chart_viz/example_data.png" />
           <br/>
@@ -161,9 +161,6 @@ A column with the specific name <code class="highlight">regions</code> should be
       </viz>
     </panel>
   </row>  
-
-
-
   <row>
     <panel>
       <title>Show static thresholds</title>
@@ -218,7 +215,7 @@ A column with the specific name <code class="highlight">regions</code> should be
       <html>
 <p>Add a gray region to highlight the area of the chart that is less than 15 minutes old. Can easily be adapted to show a maintinance window.</p>
 
-<div style="font-family: Consolas, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 14px; line-height: 19px; letter-spacing: 0px; color:rgb(212, 212, 212); background-color:rgb(30, 30, 30);padding:10px;margin:5px;"><span><span style="color: #608b4e;">&lt; ... search ... &gt;</span></span><br/><span><span style="color: #d4d4d4;font-weight: bold;">|</span><span style="color: #d4d4d4;"> </span><span style="color: #569cd6;font-weight: bold;">timechart</span><span style="color: #d4d4d4;"> span=</span><span style="color: #b5cea8;">1</span><span style="color: #d4d4d4;">h</span><span style="color: #c586c0;">avg</span><span style="color: #d4d4d4;">(series1)</span><span style="color: #dd6a6f;">as</span><span style="color: #d4d4d4;">avg</span></span><br/><span><span style="color: #d4d4d4;font-weight: bold;">|</span><span style="color: #d4d4d4;"> </span><span style="color: #569cd6;font-weight: bold;">eval</span><span style="color: #d4d4d4;"> regions = </span><span style="color: #c586c0;">if</span><span style="color: #d4d4d4;">(_time &gt; (</span><span style="color: #c586c0;">now</span><span style="color: #d4d4d4;">() - </span><span style="color: #b5cea8;">900</span><span style="color: #d4d4d4;">) ,</span><span style="color: #ce9178;">"Data still arriving=#aaaaaa"</span><span style="color: #d4d4d4;">,</span><span style="color: #ce9178;">""</span><span style="color: #d4d4d4;">)</span></span><br/></div>
+<div style="font-family: Consolas, &quot;Courier New&quot;, monospace; font-weight: normal; font-size: 14px; line-height: 19px; letter-spacing: 0px; color:rgb(212, 212, 212); background-color:rgb(30, 30, 30);padding:10px;margin:5px;"><span><span style="color: #608b4e;">&lt; ... search ... &gt;</span></span><br/><span><span style="color: #d4d4d4;font-weight: bold;">|</span><span style="color: #d4d4d4;"> </span><span style="color: #569cd6;font-weight: bold;">timechart</span><span style="color: #d4d4d4;"> span=</span><span style="color: #b5cea8;">1</span><span style="color: #d4d4d4;">h </span><span style="color: #c586c0;">avg</span><span style="color: #d4d4d4;">(series1) </span><span style="color: #dd6a6f;">as</span><span style="color: #d4d4d4;"> avg</span></span><br/><span><span style="color: #d4d4d4;font-weight: bold;">|</span><span style="color: #d4d4d4;"> </span><span style="color: #569cd6;font-weight: bold;">eval</span><span style="color: #d4d4d4;"> regions = </span><span style="color: #c586c0;">if</span><span style="color: #d4d4d4;">(_time &gt; (</span><span style="color: #c586c0;">now</span><span style="color: #d4d4d4;">() - </span><span style="color: #b5cea8;">900</span><span style="color: #d4d4d4;">),</span><span style="color: #ce9178;">"Data still arriving=#aaaaaa"</span><span style="color: #d4d4d4;">,</span><span style="color: #ce9178;">""</span><span style="color: #d4d4d4;">)</span></span><br/></div>
 
 </html>
     </panel>

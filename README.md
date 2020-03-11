@@ -11,7 +11,7 @@ Can be used to show:
 * maintenance periods
 * business hours
 
-Allows for important context to be giving to a line chart. Built with D3.
+Provide valuable context to your line charts. Built with D3.
 
 See also [Get ITSI Thresholds - a custom command](https://splunkbase.splunk.com/app/4910/) to retrieve ITSI time-based thresholds.
 
