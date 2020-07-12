@@ -142,8 +142,23 @@ function(
             if (! viz.$container_wrap.parents().is("body")) {
                 return;
             }
+            // Container can have no height if it is in a panel that isnt yet visible on the dashboard.
+            // I believe the container might also have no size in other situations too
             if (viz.$container_wrap.height() <= 0) {
+                if (!viz.hasOwnProperty("resizeWatcher")) {
+                    viz.resizeWatcher = setInterval(function(){
+                        if (viz.$container_wrap.height() > 0) {
+                            clearInterval(viz.resizeWatcher);
+                            delete viz.resizeWatcher;
+                            viz.scheduleDraw(in_data, in_config);
+                        }
+                    }, 1000);
+                }
                 return;
+            }
+            if (viz.hasOwnProperty("resizeWatcher")) {
+                clearInterval(viz.resizeWatcher);
+                delete viz.resizeWatcher;
             }
 
             if (viz.data.fields.length <= 1) {
@@ -362,6 +377,7 @@ function(
             //Instead of using d3.extent just use our own calculated values since we already went through the array
             viz.xScale.rangeRound([0, viz.width]).domain([viz.xAxisPositions[0].x, viz.xAxisPositions[viz.xAxisPositions.length - 1].x]).nice();
             viz.xAxis = d3.axisBottom(viz.xScale);
+            viz.xAxis.ticks(viz.width / 80);
             // left scale
             viz.yScale = d3.scaleLinear().range([viz.height, 0]).domain([viz.config.min !== "" ? (+ viz.config.min) : datamin_y, viz.config.max !== "" ? (+ viz.config.max) : datamax_y]).nice();
             viz.yAxis = d3.axisLeft(viz.yScale);
