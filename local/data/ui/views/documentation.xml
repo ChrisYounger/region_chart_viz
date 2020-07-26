@@ -1,4 +1,4 @@
-<dashboard theme="light">
+<dashboard theme="light" hideAppBar="true">
   <label>Region Chart Viz - Documentation</label>
   <row>
     <panel>
@@ -37,9 +37,8 @@
 <p>Provide valuable context to your line charts. Built with D3.</p>
 
 <p>See also "Get ITSI Thresholds" ( <a href="https://splunkbase.splunk.com/app/4910/" target="_blank">https://splunkbase.splunk.com/app/4910/</a> ) - a custom command to retrieve ITSI time-based thresholds.</p>
-<p>Copyright (C) 2020 Chris Younger. I am a Splunk Professional Services consultant working for JDS Australia, in Brisbane Australia.</p>
 <p>
-            <a href="https://splunkbase.splunk.com/app/4911/#/details">Splunkbase</a> | <a href="https://github.com/ChrisYounger/region_chart_viz">Source code</a> | <a href="https://answers.splunk.com/app/questions/4911.html">Questions, Bugs or Suggestions</a> | <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds">My Splunk apps</a>
+Copyright (C) 2020 Chris Younger | <a href="https://splunkbase.splunk.com/app/4911/#/details">Splunkbase</a> | <a href="https://github.com/ChrisYounger/region_chart_viz">Source code</a> | <a href="https://answers.splunk.com/app/questions/4911.html">Questions, Bugs or Suggestions</a> | <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds">My Splunk apps</a>
           </p>
 
 <br/>

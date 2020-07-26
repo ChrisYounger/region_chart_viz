@@ -15,6 +15,5 @@ Provide valuable context to your line charts. Built with D3.
 
 See also [Get ITSI Thresholds - a custom command](https://splunkbase.splunk.com/app/4910/) to retrieve ITSI time-based thresholds.
 
-Copyright (C) 2020 Chris Younger. I am a Splunk Professional Services consultant working for JDS Australia, in Brisbane Australia.
 
-[Splunkbase](https://splunkbase.splunk.com/app/4911/#/details) | [Source code](https://github.com/ChrisYounger/region_chart_viz) | [Questions, Bugs or Suggestions](https://answers.splunk.com/app/questions/4911.html) | [My Splunk apps](https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds)
+Copyright (C) 2020 Chris Younger | [Splunkbase](https://splunkbase.splunk.com/app/4911/#/details) | [Source code](https://github.com/ChrisYounger/region_chart_viz) | [Questions, Bugs or Suggestions](https://answers.splunk.com/app/questions/4911.html) | [My Splunk apps](https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds)
