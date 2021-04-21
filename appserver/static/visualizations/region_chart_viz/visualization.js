@@ -66,7 +66,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	            viz.instance_id = "region_chart_viz_" + Math.round(Math.random() * 1000000);
 	            viz.instance_id_ctr = 0;
 	            viz.theme = 'light'; 
-	            if (typeof vizUtils.getCurerntTheme === "function") {
+	            if (typeof vizUtils.getCurrentTheme === "function") {
 	                viz.theme = vizUtils.getCurrentTheme();
 	            }
 	            viz.colors = ["#006d9c", "#4fa484", "#ec9960", "#af575a", "#b6c75a", "#62b3b2"];
@@ -95,7 +95,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                ytitle_text: "",
 	                multi_series: "shaded",
 	                line_size: "3",
-	                shadow: "20",
+	                shadow: "0",
 	                line_color: "#000000",
 	                min: "",
 	                max: "",
@@ -104,6 +104,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                text_unit: "",
 	                text_unit_position: "after",
 	                region_opacity: "35",
+	                region_comparison: "",
 	                color_critical: "#B50101",
 	                color_high: "#F26A35",
 	                color_medium: "#FCB64E",
@@ -291,8 +292,12 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                    line.color = viz.config.line_color;
 	                    line.dash = "";
 	                } else if (viz.config.multi_series === "shaded") {
-	                    line.color = tinycolor(viz.config.line_color).lighten(15 * m).toString();
-	                    line.dash = (viz.config.line_size * 3) + ", " + viz.config.line_size;
+	                    if (viz.theme === 'light') {
+	                        line.color = tinycolor(viz.config.line_color).lighten(15 * m).toString();
+	                    } else {
+	                        line.color = tinycolor(viz.config.line_color).darken(6 * (m - 1)).toString();
+	                    }
+	                    line.dash = (viz.config.line_size * 5) + ", " + (viz.config.line_size * 2);
 	                } else {
 	                    line.color = viz.colors[m % viz.colors.length];
 	                    line.dash = "";
@@ -398,9 +403,16 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                        for(n = 0; n < viz.regions[k].colors.length; n++) {
 	                            statusdotsev = viz.regions[k].sevs[n];
 	                            statusdotcolor = viz.regions[k].colors[n];
-	                            if (n >= viz.regions[k].stops.length || record.y < (+ viz.regions[k].stops[n])) {
-	                                break;
+	                            if (viz.config.region_comparison === "") {
+	                                if (n >= viz.regions[k].stops.length || record.y < (+ viz.regions[k].stops[n])) {
+	                                    break;
+	                                }
+	                            } else {
+	                                if (n > viz.regions[k].stops.length || record.y < (+ viz.regions[k].stops[n])) {
+	                                    break;
+	                                }
 	                            }
+
 	                        }
 	                        // status dots are still included if they are null (becuase column might not have regions). 
 	                        // dots are not included if there is a gap in data

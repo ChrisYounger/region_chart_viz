@@ -18,4 +18,5 @@ display.visualizations.custom.region_chart_viz.region_chart_viz.text_thousands =
 display.visualizations.custom.region_chart_viz.region_chart_viz.text_unit = <string>
 display.visualizations.custom.region_chart_viz.region_chart_viz.text_unit_position = <string>
 display.visualizations.custom.region_chart_viz.region_chart_viz.region_opacity = <string>
+display.visualizations.custom.region_chart_viz.region_chart_viz.region_comparison = <string>
 display.visualizations.custom.region_chart_viz.region_chart_viz.row_limit = <string>
