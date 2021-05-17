@@ -20,3 +20,4 @@ display.visualizations.custom.region_chart_viz.region_chart_viz.text_unit_positi
 display.visualizations.custom.region_chart_viz.region_chart_viz.region_opacity = <string>
 display.visualizations.custom.region_chart_viz.region_chart_viz.region_comparison = <string>
 display.visualizations.custom.region_chart_viz.region_chart_viz.row_limit = <string>
+display.visualizations.custom.region_chart_viz.region_chart_viz.scaleregion = <string>

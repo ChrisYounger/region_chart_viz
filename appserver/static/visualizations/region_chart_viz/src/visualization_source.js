@@ -67,7 +67,8 @@ function(
                 color_normal: "#99D18B",
                 color_info: "#AED3E5",
                 transition_time: "1000",
-                row_limit: "5000"
+                row_limit: "5000",
+                scaleregion: "no"
             };
             // Override defaults with selected items from the UI
             for (var opt in config) {
@@ -208,6 +209,8 @@ function(
 
             var datamin_y = null;
             var datamax_y = null;
+            var regionmin_y = null;
+            var regionmax_y = null;
             var line;
             var just_gapped;
             var just_added;
@@ -289,6 +292,12 @@ function(
                                         // if its an odd element
                                         if (l % 2 === 1) {
                                             viz.regions[k].stops.push(regions_arr[l]);
+                                            if (regionmin_y === null || regionmin_y > regions_arr[l]) {
+                                                regionmin_y = + regions_arr[l];
+                                            }
+                                            if (regionmax_y === null || regionmax_y < regions_arr[l]) {
+                                                regionmax_y = + regions_arr[l];
+                                            }
                                         } else {
                                             sevparts = regions_arr[l].split("=");
                                             if (sevparts.length === 2) {
@@ -393,7 +402,13 @@ function(
             viz.xAxis = d3.axisBottom(viz.xScale);
             viz.xAxis.ticks(viz.width / 80);
             // left scale
-            viz.yScale = d3.scaleLinear().range([viz.height, 0]).domain([viz.config.min !== "" ? (+ viz.config.min) : datamin_y, viz.config.max !== "" ? (+ viz.config.max) : datamax_y]).nice();
+            viz.yScale = d3.scaleLinear()
+                .range([viz.height, 0])
+                .domain([
+                    viz.config.min !== "" ? (+ viz.config.min) : (viz.config.scaleregion === "yes" && regionmin_y !== null && regionmin_y < datamin_y) ? regionmin_y : datamin_y, 
+                    viz.config.max !== "" ? (+ viz.config.max) : (viz.config.scaleregion === "yes" && regionmax_y !== null && regionmax_y > datamax_y) ? regionmax_y : datamax_y
+                ])
+                .nice();
             viz.yAxis = d3.axisLeft(viz.yScale);
             // use about 1 tick per 80pixels of space
             viz.yAxis.ticks(viz.height / 80);
