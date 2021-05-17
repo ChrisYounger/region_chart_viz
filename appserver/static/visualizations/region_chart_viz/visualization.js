@@ -448,11 +448,15 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	            viz.xAxis.ticks(viz.width / 80);
 	            // left scale
 	            if (datamin_y !== null && datamin_y === datamax_y) { 
-	                datamin_y--;
+	                if (datamin_y !== 0) { 
+	                    datamin_y--; 
+	                }
 	                datamax_y++;
 	            }
 	            if (regionmin_y !== null && regionmin_y === regionmax_y) { 
-	                regionmin_y--;
+	                if (regionmin_y !== 0) { 
+	                    regionmin_y--;
+	                }
 	                regionmax_y++;
 	            }
 	            viz.yScale = d3.scaleLinear()
