@@ -57,6 +57,13 @@
                 <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
         </splunk-control-group>
 
+        <splunk-control-group label="Region align" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.region_align" value="center">
+                        <option value="center">Center</option>
+                        <option value="left">Left</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
         <splunk-control-group label="Comparison" help="">
                 <splunk-radio-input name="{{VIZ_NAMESPACE}}.region_comparison" value="">
                         <option value="">&gt;=</option>
@@ -138,7 +145,13 @@
         </splunk-control-group>
         <splunk-control-group label="Text" help="Leave blank for auto">
                 <splunk-text-input name="{{VIZ_NAMESPACE}}.xtitle_text" value=""></splunk-text-input>
-        </splunk-control-group> 
+        </splunk-control-group>
+        <splunk-control-group label="Adjust ticks" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.xtitle_nice" value="no">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+        </splunk-control-group>
 </form>
 
 

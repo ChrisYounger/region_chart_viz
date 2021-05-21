@@ -90,6 +90,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                summ_text: "hide",
 	                xtitle_show: "hide",
 	                xtitle_text: "",
+	                xtitle_nice: "no",
 	                ytitle_show: "hide",
 	                status_dots: "hide",
 	                ytitle_text: "",
@@ -104,6 +105,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                text_unit: "",
 	                text_unit_position: "after",
 	                region_opacity: "35",
+	                region_align: "center",
 	                region_comparison: "",
 	                color_critical: "#B50101",
 	                color_high: "#F26A35",
@@ -443,7 +445,15 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	            // setup the d3 scales - bottom scale
 	            viz.xScale = viz.isTimechart ? d3.scaleTime() : d3.scaleLinear();
 	            //Instead of using d3.extent just use our own calculated values since we already went through the array
-	            viz.xScale.rangeRound([0, viz.width]).domain([viz.xAxisPositions[0].x, viz.xAxisPositions[viz.xAxisPositions.length - 1].x]).nice();
+	            viz.xScale
+	                .rangeRound([0, viz.width])
+	                .domain([
+	                    viz.xAxisPositions[0].x, 
+	                    viz.xAxisPositions[viz.xAxisPositions.length - 1].x
+	                ]);
+	            if (viz.config.xtitle_nice === "yes") {
+	                viz.xScale.nice();
+	            }
 	            viz.xAxis = d3.axisBottom(viz.xScale);
 	            viz.xAxis.ticks(viz.width / 80);
 	            // left scale
@@ -491,6 +501,10 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	            if (viz.xAxisPositions.length > 1) {
 	                col_width = viz.xAxisPositions[1].x_scaled - viz.xAxisPositions[0].x_scaled;
 	            }
+	            var col_offset = 0;
+	            if (viz.config.region_align === "center") {
+	                col_offset = col_width / 2;
+	            }
 	            skips = 1;
 	            for (i = 0; i < viz.data.results.length; i += skips) {
 	                // if the regions are exactly the same for multiple rows then they will be collapsed (quick string comparison)
@@ -503,7 +517,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                for (j = 0; j < viz.regions[i].colors.length; j++) {
 	                    d = {
 	                        "sev": viz.regions[i].colors[j],
-	                        "left": viz.xAxisPositions[i].x_scaled,
+	                        "left": viz.xAxisPositions[i].x_scaled - col_offset,
 	                        "from": Math.min(Math.max(viz.yScale(j === 0 ? limit_bottom :  + viz.regions[i].stops[j-1]), 0), viz.height),
 	                        "to": Math.min(Math.max(viz.yScale(j >= viz.regions[i].stops.length ? limit_top : + viz.regions[i].stops[j]), 0), viz.height),
 	                    };
@@ -513,8 +527,16 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                    } else {
 	                        right = viz.xAxisPositions[(i+skips)].x_scaled;
 	                    }
-	                    d.width = Math.max(Math.min(right, viz.width + 10) - d.left, 1);
+	                    d.width = Math.max(Math.min(right, viz.width + Math.max(10, col_offset)) - viz.xAxisPositions[i].x_scaled, 1);
 	                    d.height = d.from - d.to;
+
+	                    // if the first block is too far too the left, make it smaller
+	                    if (d.left < 0) {
+	                        console.log("width is changing from ", d.width, "to", (d.width + d.left));
+	                        d.width += d.left;
+	                        d.left = 0;
+	                    }
+
 	                    if (d.height > 0 && viz.regions[i].colors[j] !== "") {
 	                        viz.all_regions.push(d);
 	                    }
@@ -598,6 +620,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                // The axis titles
 	                if (viz.config.xtitle_show !== "hide") {
 	                    viz.svg.append("text")
+	                        .attr("class", (viz.theme === 'light' ? "region_chart_viz-overlaytext_light" : "region_chart_viz-overlaytext_dark" ))
 	                        .attr("text-anchor", "middle")
 	                        .attr("y", viz.height + 40)
 	                        .attr("x", viz.width / 2)
@@ -605,6 +628,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                }
 	                if (viz.config.ytitle_show !== "hide") {
 	                    viz.svg.append("text")
+	                        .attr("class", (viz.theme === 'light' ? "region_chart_viz-overlaytext_light" : "region_chart_viz-overlaytext_dark" ))
 	                        .attr("text-anchor", "middle")
 	                        .attr("y", -60)
 	                        .attr("x", viz.height * -0.5)
@@ -809,7 +833,6 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 
 	                overlay_rect.on("mouseover", function() {
 	                    focus.style("opacity", 1);
-	                    tooltip.css("opacity", 1);
 	                })
 	                .on("mousemove", function() {
 	                    var j, tt_str = [], tt_height;
@@ -819,7 +842,9 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                    var diff = Math.abs (mouse_x - curr);
 	                    // Find the nearest point to the mouse cursor on the horizontal axis
 	                    for (var val = 0; val < viz.xAxisPositions.length; val++) {
-	                        var newdiff = Math.abs (mouse_x - viz.xAxisPositions[val].x_scaled);
+	                        // Dont tooltip over null data points
+	                        if (viz.xAxisPositions[val].data.length===0) { continue; }
+	                        var newdiff = Math.abs(mouse_x - viz.xAxisPositions[val].x_scaled);
 	                        if (newdiff < diff) {
 	                            diff = newdiff;
 	                            curr = viz.xAxisPositions[val].x_scaled;
@@ -827,8 +852,8 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                        }
 	                    }
 
-	                    tooltip_body.find(".region_chart_viz-tooltip_rows").remove();
 	                    if (viz.xAxisPositions[hoveredIdx] && viz.xAxisPositions[hoveredIdx].data.length > 0) {
+	                        tooltip_body.find(".region_chart_viz-tooltip_rows").remove();
 	                        var selectedData = viz.xAxisPositions[hoveredIdx].data;
 	                        // move the horizontal indicator
 	                        focus.attr("x", viz.xAxisPositions[selectedData[0].row].x_scaled);
@@ -865,11 +890,14 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                        } else {
 	                            tooltip.css({"left": "", "right": viz.width - viz.xAxisPositions[selectedData[0].row].x_scaled + 80});
 	                        }
+	                        tooltip.css("opacity", 1);
+	                    } else {
+	                        tooltip.css("opacity", 0);
 	                    }
 	                })
 	                .on("mouseout", function () {
-	                    focus.style("opacity", 0);
 	                    tooltip.css("opacity", 0);
+	                    focus.style("opacity", 0);
 	                });
 	            }
 
